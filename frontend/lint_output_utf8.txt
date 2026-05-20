@@ -1,0 +1,165 @@
+﻿
+> frontend@0.1.0 lint
+> eslint
+
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\api\auth\login\route.js
+  30:23  warning  '_' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\api\auth\register\route.js
+  50:25  warning  '_' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  76:23  warning  '_' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\api\create-order\route.js
+  1:10  warning  'prisma' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\attendance\page.js
+  23:5  error  Error: Cannot access variable before it is declared
+
+`loadEvents` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  21 |     const u = JSON.parse(data);
+  22 |     setUser(u);
+> 23 |     loadEvents(u.id);
+     |     ^^^^^^^^^^ `loadEvents` accessed before it is declared
+  24 |   }, [router]);
+  25 |
+  26 |   async function loadEvents(userId) {
+
+  24 |   }, [router]);
+  25 |
+> 26 |   async function loadEvents(userId) {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     try {
+     | ^^^^^^^^^
+> 28 |       const res = await fetch(`/api/events?userId=${userId}`);
+     | ^^^^^^^^^
+> 29 |       const d = await res.json();
+     | ^^^^^^^^^
+> 30 |       setEvents(d.events || []);
+     | ^^^^^^^^^
+> 31 |     } catch (e) { console.error(e); }
+     | ^^^^^^^^^
+> 32 |     setLoading(false);
+     | ^^^^^^^^^
+> 33 |   };
+     | ^^^^ `loadEvents` is declared here
+  34 |
+  35 |   async function loadEventAttendance(event) {
+  36 |     setSelectedEvent(event);  react-hooks/immutability
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\communication\page.js
+  29:6  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\dashboard\page.js
+  18:5  error    Error: Cannot access variable before it is declared
+
+`loadDashboard` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  16 |     const u = JSON.parse(data);
+  17 |     setUser(u);
+> 18 |     loadDashboard(u.id);
+     |     ^^^^^^^^^^^^^ `loadDashboard` accessed before it is declared
+  19 |   }, [router]);
+  20 |
+  21 |   async function loadDashboard(userId) {
+
+  19 |   }, [router]);
+  20 |
+> 21 |   async function loadDashboard(userId) {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |     try {
+     | ^^^^^^^^^
+> 23 |       const [evRes, tmRes, payRes, annRes, campRes] = await Promise.all([
+     ΓÇª
+     | ^^^^^^^^^
+> 47 |     setLoading(false);
+     | ^^^^^^^^^
+> 48 |   }
+     | ^^^^ `loadDashboard` is declared here
+  49 |
+  50 |   if (!user) return (
+  51 |     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f1f5f9" }}>  react-hooks/immutability
+  59:9  warning  'initials' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  60:9  warning  'colors' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\groups\page.js
+   13:10  warning  'allUsers' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   13:20  warning  'setAllUsers' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   18:10  warning  'loading' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   27:5   error    Error: Cannot access variable before it is declared
+
+`loadTeams` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  25 |     const u = JSON.parse(data);
+  26 |     setUser(u);
+> 27 |     loadTeams(u.id);
+     |     ^^^^^^^^^ `loadTeams` accessed before it is declared
+  28 |   }, [router]);
+  29 |
+  30 |   async function loadTeams(userId) {
+
+  28 |   }, [router]);
+  29 |
+> 30 |   async function loadTeams(userId) {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |     try {
+     | ^^^^^^^^^
+> 32 |       const res = await fetch(`/api/teams?userId=${userId}`);
+     ΓÇª
+     | ^^^^^^^^^
+> 40 |     setLoading(false);
+     | ^^^^^^^^^
+> 41 |   };
+     | ^^^^ `loadTeams` is declared here
+  42 |
+  43 |   async function loadMembers(teamId) {
+  44 |     try {  react-hooks/immutability
+   28:6   warning  React Hook useEffect has a missing dependency: 'loadTeams'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+  159:24  warning  'i' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\messages\page.js
+  43:5  error    Error: Cannot access variable before it is declared
+
+`loadMessages` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  41 |   useEffect(() => {
+  42 |     if (!teamId) return;
+> 43 |     loadMessages();
+     |     ^^^^^^^^^^^^ `loadMessages` accessed before it is declared
+  44 |     const interval = setInterval(loadMessages, 5000); // Poll every 5s
+  45 |     return () => clearInterval(interval);
+  46 |   }, [teamId]);
+
+  50 |   }, [messages]);
+  51 |
+> 52 |   const loadMessages = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 53 |     try {
+     | ^^^^^^^^^
+> 54 |       const res = await fetch(`/api/messages?teamId=${teamId}`);
+     ΓÇª
+     | ^^^^^^^^^
+> 62 |     }
+     | ^^^^^^^^^
+> 63 |   };
+     | ^^^^^ `loadMessages` is declared here
+  64 |
+  65 |   const handleSendMessage = async (e) => {
+  66 |     e.preventDefault();  react-hooks/immutability
+  46:6  warning  React Hook useEffect has a missing dependency: 'loadMessages'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\page.js
+  26:16  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\payments\page.js
+  13:10  warning  'teams' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\components\Topbar.js
+  6:34  warning  'title' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\validate-flow.js
+  1:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 21 problems (5 errors, 16 warnings)
+

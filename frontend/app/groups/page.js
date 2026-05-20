@@ -303,11 +303,11 @@ export default function GroupsPage() {
                               </div>
                             ))}
                           </div>
-                          
+
                           {linkingMemberId === m.id ? (
                             <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "4px" }}>
-                              <select 
-                                value={linkSelectValue} 
+                              <select
+                                value={linkSelectValue}
                                 onChange={e => setLinkSelectValue(e.target.value)}
                                 style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "11px", background: "#fff", color: "#374151" }}
                               >
@@ -317,13 +317,13 @@ export default function GroupsPage() {
                                   .map(x => <option key={x.userId} value={x.userId}>{x.user.name}</option>)
                                 }
                               </select>
-                              <button 
+                              <button
                                 onClick={() => linkSelectValue && handleLink(linkSelectValue, m.userId)}
                                 style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: "4px", padding: "2px 6px", fontSize: "10px", fontWeight: 700, cursor: "pointer" }}
                               >
                                 ✓
                               </button>
-                              <button 
+                              <button
                                 onClick={() => setLinkingMemberId(null)}
                                 style={{ background: "#cbd5e1", color: "#374151", border: "none", borderRadius: "4px", padding: "2px 6px", fontSize: "10px", fontWeight: 700, cursor: "pointer" }}
                               >
@@ -331,8 +331,8 @@ export default function GroupsPage() {
                               </button>
                             </div>
                           ) : (
-                            <button 
-                              onClick={() => { setLinkingMemberId(m.id); setLinkSelectValue(""); }} 
+                            <button
+                              onClick={() => { setLinkingMemberId(m.id); setLinkSelectValue(""); }}
                               style={{ background: "none", border: "none", color: "#4f46e5", fontSize: "11px", fontWeight: 600, cursor: "pointer", padding: 0, marginTop: "4px" }}
                             >
                               + Add Parent
@@ -351,11 +351,11 @@ export default function GroupsPage() {
                               </div>
                             ))}
                           </div>
-                          
+
                           {linkingMemberId === m.id ? (
                             <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "4px" }}>
-                              <select 
-                                value={linkSelectValue} 
+                              <select
+                                value={linkSelectValue}
                                 onChange={e => setLinkSelectValue(e.target.value)}
                                 style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "11px", background: "#fff", color: "#374151" }}
                               >
@@ -365,13 +365,13 @@ export default function GroupsPage() {
                                   .map(x => <option key={x.userId} value={x.userId}>{x.user.name}</option>)
                                 }
                               </select>
-                              <button 
+                              <button
                                 onClick={() => linkSelectValue && handleLink(m.userId, linkSelectValue)}
                                 style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: "4px", padding: "2px 6px", fontSize: "10px", fontWeight: 700, cursor: "pointer" }}
                               >
                                 ✓
                               </button>
-                              <button 
+                              <button
                                 onClick={() => setLinkingMemberId(null)}
                                 style={{ background: "#cbd5e1", color: "#374151", border: "none", borderRadius: "4px", padding: "2px 6px", fontSize: "10px", fontWeight: 700, cursor: "pointer" }}
                               >
@@ -379,8 +379,8 @@ export default function GroupsPage() {
                               </button>
                             </div>
                           ) : (
-                            <button 
-                              onClick={() => { setLinkingMemberId(m.id); setLinkSelectValue(""); }} 
+                            <button
+                              onClick={() => { setLinkingMemberId(m.id); setLinkSelectValue(""); }}
                               style={{ background: "none", border: "none", color: "#4f46e5", fontSize: "11px", fontWeight: 600, cursor: "pointer", padding: 0, marginTop: "4px" }}
                             >
                               + Add Child

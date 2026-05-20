@@ -57,7 +57,7 @@ async function test() {
   console.log("\nTesting team members query (post-link)...");
   members = await getMembers();
   playerMember = members.find(m => m.userId === player.id);
-  console.log("Player's linked parents (should have Parent Patricia):", 
+  console.log("Player's linked parents (should have Parent Patricia):",
     JSON.stringify(playerMember.user.childLinks, null, 2)
   );
 
@@ -74,7 +74,7 @@ async function test() {
       select: { childId: true }
     });
     const userIds = [userId, ...parentLinks.map(l => l.childId)];
-    
+
     return await prisma.payment.findMany({
       where: { userId: { in: userIds }, status: "PENDING" },
       include: { user: { select: { id: true, name: true } } }

@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pydantic
+bcrypt
+passlib[bcrypt]
+razorpay
+python-multipart
+email-validator

@@ -13,7 +13,7 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  
+
   // File upload simulation state
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -24,7 +24,7 @@ export default function MessagesPage() {
     if (!data) { router.replace("/"); return; }
     const u = JSON.parse(data);
     setUser(u);
-    
+
     // Fetch team for this user (assume they belong to the first team they are a member of)
     fetch(`/api/teams?userId=${u.id}`)
       .then(res => res.json())
@@ -65,9 +65,9 @@ export default function MessagesPage() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && !selectedFile) return;
-    
+
     setSending(true);
-    
+
     // Simulate file upload (in a real app, upload to S3/Cloudinary and get URL)
     let fileUrl = null;
     let type = "TEXT";
@@ -114,7 +114,7 @@ export default function MessagesPage() {
         </div>
       ) : (
         <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", height: "calc(100vh - 180px)", overflow: "hidden" }}>
-          
+
           {/* Chat Header */}
           <div style={{ padding: "16px 24px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "12px", background: "#f8fafc" }}>
             <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700 }}>
@@ -135,8 +135,8 @@ export default function MessagesPage() {
             ) : (
               messages.map((msg, i) => {
                 const isMe = msg.userId === user.id;
-                const showHeader = i === 0 || messages[i-1].userId !== msg.userId;
-                
+                const showHeader = i === 0 || messages[i - 1].userId !== msg.userId;
+
                 return (
                   <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", marginBottom: showHeader ? "8px" : "2px" }}>
                     {showHeader && (
@@ -146,10 +146,10 @@ export default function MessagesPage() {
                         <span style={{ fontSize: "10px", color: "#94a3b8" }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     )}
-                    <div style={{ 
-                      background: isMe ? "#2563eb" : "#f1f5f9", 
-                      color: isMe ? "#fff" : "#0f172a", 
-                      padding: "10px 14px", 
+                    <div style={{
+                      background: isMe ? "#2563eb" : "#f1f5f9",
+                      color: isMe ? "#fff" : "#0f172a",
+                      padding: "10px 14px",
                       borderRadius: isMe ? "14px 4px 14px 14px" : "4px 14px 14px 14px",
                       maxWidth: "75%",
                       fontSize: "14px",
@@ -183,11 +183,11 @@ export default function MessagesPage() {
                 <input type="file" style={{ display: "none" }} onChange={(e) => setSelectedFile(e.target.files[0])} />
                 <span style={{ fontSize: "18px" }}>📎</span>
               </label>
-              <input 
-                type="text" 
-                value={newMessage} 
-                onChange={(e) => setNewMessage(e.target.value)} 
-                placeholder="Type your message..." 
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your message..."
                 style={{ flex: 1, padding: "14px 16px", borderRadius: "24px", border: "1px solid #cbd5e1", outline: "none", fontSize: "14px" }}
               />
               <button type="submit" disabled={sending || (!newMessage.trim() && !selectedFile)} style={{ padding: "14px 24px", borderRadius: "24px", background: (sending || (!newMessage.trim() && !selectedFile)) ? "#93c5fd" : "#2563eb", color: "#fff", border: "none", fontSize: "14px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
