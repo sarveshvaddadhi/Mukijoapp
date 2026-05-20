@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USERS ──────────────────────────────────────────
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role            String   @default("COACH") // ADMIN, COACH, PLAYER, PARENT
+  phone           String?
+  aadhaarNo       String?  @unique
+  aadhaarVerified Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  teamMembers    TeamMember[]
+  parentLinks    ParentLink[]   @relation("ParentUser")
+  childLinks     ParentLink[]   @relation("ChildUser")
+  eventsCreated  Event[]        @relation("EventCreator")
+  rsvps          EventRSVP[]
+  attendances    Attendance[]
+  payments       Payment[]
+  messages       Message[]
+  announcements  Announcement[]
+  donations      Donation[]
+  pollVotes      PollVote[]
+  campaigns      Campaign[]
+}
+
+// ─── TEAMS / GROUPS ─────────────────────────────────
+model Team {
+  id          Int      @id @default(autoincrement())
+  name        String
+  division    String?  // "Elite Division", "Social Weekend"
+  status      String   @default("ACTIVE") // ACTIVE, OFF_SEASON, ARCHIVED
+  description String?
+  createdAt   DateTime @default(now())
+
+  members       TeamMember[]
+  events        Event[]
+  channels      Channel[]
+  announcements Announcement[]
+  campaigns     Campaign[]
+  polls         Poll[]
+}
+
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  teamId    Int
+  role      String   @default("PLAYER") // PLAYER, COACH, PARENT, ADMIN
+  jersey    String?
+  joinedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+}
+
+model ParentLink {
+  id        Int      @id @default(autoincrement())
+  parentId  Int
+  childId   Int
+  createdAt DateTime @default(now())
+
+  parent User @relation("ParentUser", fields: [parentId], references: [id], onDelete: Cascade)
+  child  User @relation("ChildUser", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId])
+}
+
+// ─── EVENTS ─────────────────────────────────────────
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  type        String   @default("TRAINING") // MATCH, TRAINING, MEETING
+  description String?
+  location    String?
+  date        DateTime
+  endTime     DateTime?
+  recurring   Boolean  @default(false)
+  recurrence  String?  // "WEEKLY", "MONTHLY"
+  teamId      Int
+  createdById Int
+  createdAt   DateTime @default(now())
+
+  team      Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User        @relation("EventCreator", fields: [createdById], references: [id])
+  rsvps     EventRSVP[]
+  attendances Attendance[]
+}
+
+model EventRSVP {
+  id       Int    @id @default(autoincrement())
+  eventId  Int
+  userId   Int
+  status   String @default("PENDING") // GOING, NOT_GOING, MAYBE, PENDING
+  respondedAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+// ─── ATTENDANCE ─────────────────────────────────────
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+  userId    Int
+  status    String   @default("PRESENT") // PRESENT, ABSENT, LATE, EXCUSED
+  markedAt  DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+// ─── PAYMENTS ───────────────────────────────────────
+model Payment {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  amount      Float
+  type        String   @default("MEMBERSHIP") // MEMBERSHIP, EVENT, DONATION, OTHER
+  status      String   @default("PENDING") // PAID, PENDING, OVERDUE, REFUNDED
+  method      String?  // UPI, CARD, CASH, BANK_TRANSFER
+  reference   String?  // UPI ref / transaction ID
+  description String?
+  eventId     Int?
+  dueDate     DateTime?
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── CHAT & COMMUNICATION ───────────────────────────
+model Channel {
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String   @default("GROUP") // GROUP, DIRECT, ANNOUNCEMENT
+  teamId    Int?
+  createdAt DateTime @default(now())
+
+  team     Team?     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  messages Message[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  channelId Int
+  userId    Int
+  content   String
+  type      String   @default("TEXT") // TEXT, IMAGE, FILE, VOICE
+  fileUrl   String?
+  createdAt DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  teamId    Int
+  userId    Int
+  title     String
+  content   String
+  priority  String   @default("NORMAL") // NORMAL, URGENT, INFO
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── FUNDRAISING ────────────────────────────────────
+model Campaign {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  goalAmount  Float
+  raised      Float    @default(0)
+  status      String   @default("ACTIVE") // ACTIVE, COMPLETED, PAUSED
+  teamId      Int
+  createdById Int
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User       @relation(fields: [createdById], references: [id])
+  donations Donation[]
+}
+
+model Donation {
+  id         Int      @id @default(autoincrement())
+  campaignId Int
+  userId     Int
+  amount     Float
+  message    String?
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── POLLS ──────────────────────────────────────────
+model Poll {
+  id        Int      @id @default(autoincrement())
+  question  String
+  teamId    Int
+  status    String   @default("ACTIVE") // ACTIVE, CLOSED
+  createdAt DateTime @default(now())
+
+  team    Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  options PollOption[]
+  votes   PollVote[]
+}
+
+model PollOption {
+  id     Int    @id @default(autoincrement())
+  pollId Int
+  text   String
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+}
+
+model PollVote {
+  id       Int      @id @default(autoincrement())
+  pollId   Int
+  optionId Int
+  userId   Int
+  votedAt  DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+}

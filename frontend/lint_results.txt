@@ -1,0 +1,410 @@
+﻿
+> frontend@0.1.0 lint
+> eslint
+
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\api\auth\login\route.js
+  30:23  warning  '_' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\api\auth\register\route.js
+  31:23  warning  '_' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\attendance\page.js
+  22:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  20 |     if (!data) { router.replace("/"); return; }
+  21 |     const u = JSON.parse(data);
+> 22 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  23 |     loadEvents(u.id);
+  24 |   }, [router]);
+  25 |                                                                                                               react-hooks/set-state-in-effect
+  23:5  error  Error: Cannot access variable before it is declared
+
+`loadEvents` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  21 |     const u = JSON.parse(data);
+  22 |     setUser(u);
+> 23 |     loadEvents(u.id);
+     |     ^^^^^^^^^^ `loadEvents` accessed before it is declared
+  24 |   }, [router]);
+  25 |
+  26 |   const loadEvents = async (userId) => {
+
+  24 |   }, [router]);
+  25 |
+> 26 |   const loadEvents = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     try {
+     | ^^^^^^^^^
+> 28 |       const res = await fetch(`/api/events?userId=${userId}`);
+     | ^^^^^^^^^
+> 29 |       const d = await res.json();
+     | ^^^^^^^^^
+> 30 |       setEvents(d.events || []);
+     | ^^^^^^^^^
+> 31 |     } catch (e) { console.error(e); }
+     | ^^^^^^^^^
+> 32 |     setLoading(false);
+     | ^^^^^^^^^
+> 33 |   };
+     | ^^^^^ `loadEvents` is declared here
+  34 |
+  35 |   const loadEventAttendance = async (event) => {
+  36 |     setSelectedEvent(event);  react-hooks/immutability
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\calendar\page.js
+  23:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  21 |     if (!data) { router.replace("/"); return; }
+  22 |     const u = JSON.parse(data);
+> 23 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  24 |     loadEvents(u.id);
+  25 |   }, [router]);
+  26 |            react-hooks/set-state-in-effect
+  24:5  error  Error: Cannot access variable before it is declared
+
+`loadEvents` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  22 |     const u = JSON.parse(data);
+  23 |     setUser(u);
+> 24 |     loadEvents(u.id);
+     |     ^^^^^^^^^^ `loadEvents` accessed before it is declared
+  25 |   }, [router]);
+  26 |
+  27 |   const loadEvents = async (userId) => {
+
+  25 |   }, [router]);
+  26 |
+> 27 |   const loadEvents = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     try {
+     | ^^^^^^^^^
+> 29 |       const res = await fetch(`/api/events?userId=${userId}`);
+     | ^^^^^^^^^
+> 30 |       const d = await res.json();
+     | ^^^^^^^^^
+> 31 |       setEvents(d.events || []);
+     | ^^^^^^^^^
+> 32 |     } catch (e) { console.error(e); }
+     | ^^^^^^^^^
+> 33 |   };
+     | ^^^^^ `loadEvents` is declared here
+  34 |
+  35 |   if (!user) return null;
+  36 |  react-hooks/immutability
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\communication\page.js
+  27:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  25 |     if (!data) { router.replace("/"); return; }
+  26 |     const u = JSON.parse(data);
+> 27 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  28 |     loadData(u.id);
+  29 |   }, [router]);
+  30 |  react-hooks/set-state-in-effect
+  28:5  error    Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  26 |     const u = JSON.parse(data);
+  27 |     setUser(u);
+> 28 |     loadData(u.id);
+     |     ^^^^^^^^ `loadData` accessed before it is declared
+  29 |   }, [router]);
+  30 |
+  31 |   const loadData = async (userId) => {
+
+  29 |   }, [router]);
+  30 |
+> 31 |   const loadData = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     try {
+     | ^^^^^^^^^
+> 33 |       const tRes = await fetch(`/api/teams?userId=${userId}`);
+     ΓÇª
+     | ^^^^^^^^^
+> 52 |     } catch (e) { console.error(e); }
+     | ^^^^^^^^^
+> 53 |   };
+     | ^^^^^ `loadData` is declared here
+  54 |
+  55 |   const loadMessages = async (channelId) => {
+  56 |     try {                                                                                    react-hooks/immutability
+  29:6  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/exhaustive-deps
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\dashboard\page.js
+  17:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  15 |     if (!data) { router.replace("/"); return; }
+  16 |     const u = JSON.parse(data);
+> 17 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  18 |     loadDashboard(u.id);
+  19 |   }, [router]);
+  20 |                                           react-hooks/set-state-in-effect
+  18:5  error    Error: Cannot access variable before it is declared
+
+`loadDashboard` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  16 |     const u = JSON.parse(data);
+  17 |     setUser(u);
+> 18 |     loadDashboard(u.id);
+     |     ^^^^^^^^^^^^^ `loadDashboard` accessed before it is declared
+  19 |   }, [router]);
+  20 |
+  21 |   const loadDashboard = async (userId) => {
+
+  19 |   }, [router]);
+  20 |
+> 21 |   const loadDashboard = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |     try {
+     | ^^^^^^^^^
+> 23 |       const [evRes, tmRes, payRes, annRes, campRes] = await Promise.all([
+     ΓÇª
+     | ^^^^^^^^^
+> 47 |     setLoading(false);
+     | ^^^^^^^^^
+> 48 |   };
+     | ^^^^^ `loadDashboard` is declared here
+  49 |
+  50 |   if (!user) return (
+  51 |     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f1f5f9" }}>  react-hooks/immutability
+  59:9  warning  'initials' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  60:9  warning  'colors' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\events\page.js
+  29:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  27 |     if (!data) { router.replace("/"); return; }
+  28 |     const u = JSON.parse(data);
+> 29 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  30 |     if (searchParams.get("create") === "true") setShowForm(true);
+  31 |     loadData(u.id);
+  32 |   }, [router, searchParams]);  react-hooks/set-state-in-effect
+  31:5  error  Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  29 |     setUser(u);
+  30 |     if (searchParams.get("create") === "true") setShowForm(true);
+> 31 |     loadData(u.id);
+     |     ^^^^^^^^ `loadData` accessed before it is declared
+  32 |   }, [router, searchParams]);
+  33 |
+  34 |   const loadData = async (userId) => {
+
+  32 |   }, [router, searchParams]);
+  33 |
+> 34 |   const loadData = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 35 |     try {
+     | ^^^^^^^^^
+> 36 |       const [evRes, tmRes] = await Promise.all([
+     ΓÇª
+     | ^^^^^^^^^
+> 45 |     setLoading(false);
+     | ^^^^^^^^^
+> 46 |   };
+     | ^^^^^ `loadData` is declared here
+  47 |
+  48 |   const update = (f) => (e) => setForm(prev => ({ ...prev, [f]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+  49 |                                                     react-hooks/immutability
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\fundraising\page.js
+  23:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  21 |     if (!data) { router.replace("/"); return; }
+  22 |     const u = JSON.parse(data);
+> 23 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  24 |     loadData(u.id);
+  25 |   }, [router]);
+  26 |  react-hooks/set-state-in-effect
+  24:5  error  Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  22 |     const u = JSON.parse(data);
+  23 |     setUser(u);
+> 24 |     loadData(u.id);
+     |     ^^^^^^^^ `loadData` accessed before it is declared
+  25 |   }, [router]);
+  26 |
+  27 |   const loadData = async (userId) => {
+
+  25 |   }, [router]);
+  26 |
+> 27 |   const loadData = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     try {
+     | ^^^^^^^^^
+> 29 |       const [cRes, tRes] = await Promise.all([
+     ΓÇª
+     | ^^^^^^^^^
+> 38 |     setLoading(false);
+     | ^^^^^^^^^
+> 39 |   };
+     | ^^^^^ `loadData` is declared here
+  40 |
+  41 |   const update = (f) => (e) => setForm(prev => ({ ...prev, [f]: e.target.value }));
+  42 |                                                                                       react-hooks/immutability
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\groups\page.js
+   13:10  warning  'allUsers' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   13:20  warning  'setAllUsers' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   18:10  warning  'loading' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   24:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  22 |     if (!data) { router.replace("/"); return; }
+  23 |     const u = JSON.parse(data);
+> 24 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  25 |     loadTeams(u.id);
+  26 |   }, [router]);
+  27 |  react-hooks/set-state-in-effect
+   25:5   error    Error: Cannot access variable before it is declared
+
+`loadTeams` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  23 |     const u = JSON.parse(data);
+  24 |     setUser(u);
+> 25 |     loadTeams(u.id);
+     |     ^^^^^^^^^ `loadTeams` accessed before it is declared
+  26 |   }, [router]);
+  27 |
+  28 |   const loadTeams = async (userId) => {
+
+  26 |   }, [router]);
+  27 |
+> 28 |   const loadTeams = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |     try {
+     | ^^^^^^^^^
+> 30 |       const res = await fetch(`/api/teams?userId=${userId}`);
+     ΓÇª
+     | ^^^^^^^^^
+> 38 |     setLoading(false);
+     | ^^^^^^^^^
+> 39 |   };
+     | ^^^^^ `loadTeams` is declared here
+  40 |
+  41 |   const loadMembers = async (teamId) => {
+  42 |     try {                                                                                                 react-hooks/immutability
+   26:6   warning  React Hook useEffect has a missing dependency: 'loadTeams'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/exhaustive-deps
+  126:24  warning  'i' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\app\payments\page.js
+  13:10  warning  'teams' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  22:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  20 |     if (!data) { router.replace("/"); return; }
+  21 |     const u = JSON.parse(data);
+> 22 |     setUser(u);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  23 |     loadData(u.id);
+  24 |   }, [router]);
+  25 |  react-hooks/set-state-in-effect
+  23:5   error    Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  21 |     const u = JSON.parse(data);
+  22 |     setUser(u);
+> 23 |     loadData(u.id);
+     |     ^^^^^^^^ `loadData` accessed before it is declared
+  24 |   }, [router]);
+  25 |
+  26 |   const loadData = async (userId) => {
+
+  24 |   }, [router]);
+  25 |
+> 26 |   const loadData = async (userId) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     try {
+     | ^^^^^^^^^
+> 28 |       const [pRes, tRes] = await Promise.all([
+     ΓÇª
+     | ^^^^^^^^^
+> 46 |     setLoading(false);
+     | ^^^^^^^^^
+> 47 |   };
+     | ^^^^^ `loadData` is declared here
+  48 |
+  49 |   const update = (f) => (e) => setForm(prev => ({ ...prev, [f]: e.target.value }));
+  50 |                                                                                       react-hooks/immutability
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\components\AppShell.js
+  13:19  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  11 |     if (typeof window !== "undefined") {
+  12 |       const stored = localStorage.getItem("mukijo_user");
+> 13 |       if (stored) setUser(JSON.parse(stored));
+     |                   ^^^^^^^ Avoid calling setState() directly within an effect
+  14 |     }
+  15 |   }, []);
+  16 |  react-hooks/set-state-in-effect
+
+C:\Users\Admin\Desktop\Mukijoapp\frontend\components\Topbar.js
+  6:34  warning  'title' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 29 problems (17 errors, 12 warnings)
+
