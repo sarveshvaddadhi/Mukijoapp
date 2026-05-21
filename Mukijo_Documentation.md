@@ -36,6 +36,21 @@ Mukijo is a modern, high-performance sports team management application designed
 +-----------------------+ +-------------------+ +-----------------------+
 ```
 
+## 1.1 How It Works
+Mukijo works by connecting three main layers: the user-facing frontend, the backend API layer, and the database/payment gateways.
+
+- Authentication begins with Aadhaar SMS OTP verification and password login.
+- The frontend stores user session data locally and redirects based on role:
+  - `PLAYER` → `/calendar`
+  - `PARENT` → `/settlement`
+  - `COACH` / `ADMIN` → `/dashboard`
+- Coaches and admins create teams, events, announcements, and payment invoices.
+- Players and parents view schedules, submit RSVPs, and pay invoices through Razorpay.
+- After an event, coaches record attendance and the backend updates event status in the database.
+- External services (MSG91 and Razorpay) are used for OTP delivery and payment verification, while Prisma manages PostgreSQL operations.
+
+This section summarizes the full app flow and serves as the main “how it works” reference.
+
 ### Core Technologies
 1. **Frontend / Core Logic:** Next.js (React 18) utilizing the modern **App Router** framework (`app/` directory).
 2. **Styling:** Premium Vanilla CSS-in-JS style objects and absolute custom CSS (`globals.css`) designed in an **Indigo-accented Professional Theme** with polished transitions, glassmorphic inputs, and hover micro-animations.

@@ -104,6 +104,7 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           aadhaarNo: aadhaarNo.replace(/\s/g, ""),
+          otp: aadhaarOtp,
           code: aadhaarOtp,
           name: form.name
         }),
@@ -173,8 +174,33 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.message || "Registration failed."); setLoading(false); return; }
+
+      // Auto-join team if teamId parameter is present
+      const params = new URLSearchParams(window.location.search);
+      const teamId = params.get("teamId");
+      if (teamId) {
+        try {
+          await fetch(`/api/teams/${teamId}/members`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: form.email,
+              role: form.role
+            })
+          });
+        } catch (err) {
+          console.error("Failed to auto-join team during registration:", err);
+        }
+      }
+
       setSuccess(true);
-      setTimeout(() => router.push("/"), 2000);
+      setTimeout(() => {
+        if (teamId) {
+          router.push(`/?teamId=${teamId}`);
+        } else {
+          router.push("/");
+        }
+      }, 2000);
     } catch {
       setError("Server error. Please try again.");
       setLoading(false);

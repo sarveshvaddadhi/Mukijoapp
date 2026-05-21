@@ -18,6 +18,16 @@ export default function GroupsPage() {
   const [loading, setLoading] = useState(true);
   const [linkingMemberId, setLinkingMemberId] = useState(null);
   const [linkSelectValue, setLinkSelectValue] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyJoinLink = () => {
+    if (!selectedTeam) return;
+    const link = `${window.location.origin}/join?teamId=${selectedTeam.id}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     const data = localStorage.getItem("mukijo_user");
@@ -234,9 +244,14 @@ export default function GroupsPage() {
               <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>Member Management</h2>
               <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>Manage players, staff and families for {selectedTeam.name}</p>
             </div>
-            <button onClick={() => setShowAddMember(!showAddMember)} style={{ padding: "9px 16px", borderRadius: "10px", background: "#4f46e5", color: "#fff", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
-              {showAddMember ? "Cancel" : "👤 Add Member"}
-            </button>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={handleCopyJoinLink} style={{ padding: "9px 16px", borderRadius: "10px", background: copied ? "#16a34a" : "#fff", color: copied ? "#fff" : "#4f46e5", border: copied ? "none" : "1.5px solid #cbd5e1", fontSize: "13px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "6px" }}>
+                {copied ? "✓ Copied!" : "🔗 Copy Join Link"}
+              </button>
+              <button onClick={() => setShowAddMember(!showAddMember)} style={{ padding: "9px 16px", borderRadius: "10px", background: "#4f46e5", color: "#fff", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                {showAddMember ? "Cancel" : "👤 Add Member"}
+              </button>
+            </div>
           </div>
 
           {/* Add Member Form */}

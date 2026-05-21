@@ -104,6 +104,27 @@ def create_team(payload: schemas.TeamCreate, db: Session = Depends(get_db)):
         print("Error creating team:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
+# GET /api/teams/default
+@router.get("/teams/default")
+def get_default_team(db: Session = Depends(get_db)):
+    try:
+        team = db.query(models.Team).filter(models.Team.name == "Default Team").first()
+        if not team:
+            team = db.query(models.Team).order_by(models.Team.id.asc()).first()
+        if not team:
+            team = models.Team(
+                name="Default Team",
+                division="General",
+                description="Welcome to Mukijo! This is the default general sports team."
+            )
+            db.add(team)
+            db.commit()
+            db.refresh(team)
+        return {"team": serialize_team(team)}
+    except Exception as e:
+        print("Error fetching default team:", e)
+        raise HTTPException(status_code=500, detail="Server error")
+
 # GET /api/teams/{id}
 @router.get("/teams/{team_id}")
 def get_team(team_id: int, db: Session = Depends(get_db)):

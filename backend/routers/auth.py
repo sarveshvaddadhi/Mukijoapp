@@ -19,6 +19,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     except Exception:
         return False
 
+
+def normalize_phone(phone: str) -> str:
+    return re.sub(r"[^\d]", "", phone or "")
+
 # POST /api/auth/register
 @router.post("/auth/register")
 def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
@@ -167,7 +171,10 @@ def send_aadhaar_otp(payload: schemas.SendAadhaarOTP, db: Session = Depends(get_
 def verify_aadhaar_otp(payload: schemas.VerifyAadhaarOTP):
     try:
         cleaned_aadhaar = re.sub(r"\s+", "", payload.aadhaarNo)
-        if payload.otp == "123456":
+        otp_val = payload.otp or payload.code
+        if not otp_val:
+            raise HTTPException(status_code=400, detail="OTP code is required")
+        if otp_val == "123456":
             return {
                 "success": True,
                 "message": "Aadhaar verified successfully",
@@ -186,6 +193,47 @@ def verify_aadhaar_otp(payload: schemas.VerifyAadhaarOTP):
     except Exception as e:
         print("Verify Aadhaar OTP Error:", e)
         raise HTTPException(status_code=500, detail="Server error during Aadhaar verification.")
+
+# POST /api/auth/send-login-otp
+@router.post("/auth/send-login-otp")
+def send_login_otp(payload: schemas.SendLoginOTP, db: Session = Depends(get_db)):
+    try:
+        cleaned_phone = normalize_phone(payload.phone)
+        if not re.match(r"^\d{10,15}$", cleaned_phone):
+            raise HTTPException(status_code=400, detail="Phone number must contain 10 to 15 digits")
+
+        user = db.query(models.User).filter(models.User.phone == cleaned_phone).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="No account found with this phone number.")
+
+        return send_otp({"phone": cleaned_phone})
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print("Send login OTP error:", e)
+        raise HTTPException(status_code=500, detail="Server error sending login OTP.")
+
+# POST /api/auth/verify-login-otp
+@router.post("/auth/verify-login-otp")
+def verify_login_otp(payload: schemas.VerifyLoginOTP, db: Session = Depends(get_db)):
+    try:
+        cleaned_phone = normalize_phone(payload.phone)
+        verification = verify_otp({"phone": cleaned_phone, "code": payload.code})
+        if not verification.get("verified"):
+            raise HTTPException(status_code=400, detail="Invalid OTP.")
+
+        user = db.query(models.User).filter(models.User.phone == cleaned_phone).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="No account found with this phone number.")
+
+        user_dict = {c.name: getattr(user, c.name) for c in user.__table__.columns}
+        user_dict.pop("password", None)
+        return {"user": user_dict}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print("Verify login OTP error:", e)
+        raise HTTPException(status_code=500, detail="Server error verifying login OTP.")
 
 # POST /api/send-otp
 @router.post("/send-otp")

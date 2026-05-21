@@ -24,7 +24,15 @@ class SendAadhaarOTP(BaseModel):
 
 class VerifyAadhaarOTP(BaseModel):
     aadhaarNo: str
-    otp: str
+    otp: Optional[str] = None
+    code: Optional[str] = None
+
+class SendLoginOTP(BaseModel):
+    phone: str
+
+class VerifyLoginOTP(BaseModel):
+    phone: str
+    code: str
 
 # --- Teams ---
 class TeamCreate(BaseModel):

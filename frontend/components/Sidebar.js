@@ -27,7 +27,8 @@ export default function Sidebar() {
     <aside style={{
       width: "224px",
       minHeight: "100vh",
-      background: "#0f172a",
+      background: "#ffffff",
+      borderRight: "1px solid #e2e8f0",
       display: "flex",
       flexDirection: "column",
       flexShrink: 0,
@@ -39,8 +40,8 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{ padding: "28px 20px 20px" }}>
-        <div style={{ color: "#fff", fontSize: "26px", fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1 }}>Mukijo</div>
-        <div style={{ color: "#818cf8", fontSize: "11px", fontWeight: 500, marginTop: "3px", letterSpacing: "0.5px" }}>Sports Management</div>
+        <div style={{ color: "#0f172a", fontSize: "26px", fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1 }}>Mukijo</div>
+        <div style={{ color: "#4f46e5", fontSize: "11px", fontWeight: 600, marginTop: "3px", letterSpacing: "0.5px", textTransform: "uppercase", opacity: 0.9 }}>Sports Management</div>
       </div>
 
       {/* New Event Button */}
@@ -48,22 +49,31 @@ export default function Sidebar() {
         <Link href="/events?create=true" style={{ textDecoration: "none" }}>
           <button style={{
             width: "100%",
-            background: "#4f46e5",
+            background: "linear-gradient(135deg, #4f46e5 0%, #2563eb 100%)",
             color: "#fff",
             border: "none",
             borderRadius: "10px",
             padding: "10px 16px",
             fontSize: "13px",
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             gap: "8px",
             justifyContent: "center",
-            transition: "background 0.2s",
+            transition: "all 0.2s",
+            boxShadow: "0 4px 12px rgba(79, 70, 229, 0.15)",
           }}
-            onMouseEnter={e => e.currentTarget.style.background = "#4338ca"}
-            onMouseLeave={e => e.currentTarget.style.background = "#4f46e5"}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "linear-gradient(135deg, #4338ca 0%, #1d4ed8 100%)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 6px 16px rgba(79, 70, 229, 0.25)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "linear-gradient(135deg, #4f46e5 0%, #2563eb 100%)";
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(79, 70, 229, 0.15)";
+            }}
           >
             <span style={{ fontSize: "18px", fontWeight: 300 }}>+</span>
             New Event
@@ -86,16 +96,26 @@ export default function Sidebar() {
                 padding: "10px 12px",
                 borderRadius: "8px",
                 marginBottom: "2px",
-                color: active ? "#818cf8" : "#94a3b8",
-                background: active ? "rgba(79, 70, 229, 0.15)" : "transparent",
+                color: active ? "#4f46e5" : "#475569",
+                background: active ? "rgba(79, 70, 229, 0.08)" : "transparent",
                 textDecoration: "none",
                 fontSize: "14px",
-                fontWeight: active ? 600 : 400,
+                fontWeight: active ? 700 : 500,
                 transition: "all 0.15s",
-                borderLeft: active ? "2px solid #4f46e5" : "2px solid transparent",
+                borderLeft: active ? "3px solid #4f46e5" : "3px solid transparent",
               }}
-              onMouseEnter={e => { if (!active) e.currentTarget.style.color = "#e2e8f0"; }}
-              onMouseLeave={e => { if (!active) e.currentTarget.style.color = active ? "#818cf8" : "#94a3b8"; }}
+              onMouseEnter={e => {
+                if (!active) {
+                  e.currentTarget.style.color = "#0f172a";
+                  e.currentTarget.style.background = "#f8fafc";
+                }
+              }}
+              onMouseLeave={e => {
+                if (!active) {
+                  e.currentTarget.style.color = "#475569";
+                  e.currentTarget.style.background = "transparent";
+                }
+              }}
             >
               <span style={{ fontSize: "16px", width: "20px", textAlign: "center" }}>{item.icon}</span>
               {item.label}
@@ -119,11 +139,25 @@ export default function Sidebar() {
                 padding: "10px 12px",
                 borderRadius: "8px",
                 marginBottom: "2px",
-                color: active ? "#818cf8" : "#94a3b8",
-                background: active ? "rgba(79, 70, 229, 0.15)" : "transparent",
+                color: active ? "#4f46e5" : "#475569",
+                background: active ? "rgba(79, 70, 229, 0.08)" : "transparent",
                 textDecoration: "none",
                 fontSize: "14px",
-                fontWeight: active ? 600 : 400,
+                fontWeight: active ? 700 : 500,
+                transition: "all 0.15s",
+                borderLeft: active ? "3px solid #4f46e5" : "3px solid transparent",
+              }}
+              onMouseEnter={e => {
+                if (!active) {
+                  e.currentTarget.style.color = "#0f172a";
+                  e.currentTarget.style.background = "#f8fafc";
+                }
+              }}
+              onMouseLeave={e => {
+                if (!active) {
+                  e.currentTarget.style.color = "#475569";
+                  e.currentTarget.style.background = "transparent";
+                }
               }}
             >
               <span style={{ fontSize: "16px", width: "20px", textAlign: "center" }}>{item.icon}</span>

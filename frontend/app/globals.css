@@ -3,7 +3,7 @@
 @import "tailwindcss";
 
 :root {
-  --sidebar-bg: #0f172a;
+  --sidebar-bg: #ffffff;
   --sidebar-width: 224px;
   --surface: #ffffff;
   --surface-2: #f8fafc;
