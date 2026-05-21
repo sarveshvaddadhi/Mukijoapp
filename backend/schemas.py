@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Any
 from datetime import datetime
 
-# --- Authentication ---
+
 class UserRegister(BaseModel):
     name: str
     email: EmailStr
@@ -34,7 +34,7 @@ class VerifyLoginOTP(BaseModel):
     phone: str
     code: str
 
-# --- Teams ---
+
 class TeamCreate(BaseModel):
     name: str
     division: Optional[str] = None
@@ -50,7 +50,7 @@ class ParentLinkRequest(BaseModel):
     parentId: int
     childId: int
 
-# --- Events & RSVPs ---
+
 class EventCreate(BaseModel):
     title: str
     type: str = "TRAINING"
@@ -68,7 +68,7 @@ class RSVPCreate(BaseModel):
     userId: int
     status: str
 
-# --- Attendance ---
+
 class AttendanceRecord(BaseModel):
     userId: int
     status: str
@@ -79,7 +79,7 @@ class AttendanceCreate(BaseModel):
     status: Optional[str] = None
     records: Optional[List[AttendanceRecord]] = None
 
-# --- Payments ---
+
 class PaymentCreate(BaseModel):
     userId: int
     amount: float
@@ -101,7 +101,7 @@ class VerifyPaymentRequest(BaseModel):
     razorpay_payment_id: str
     razorpay_signature: str
 
-# --- Communication (Messages, Announcements, Polls) ---
+
 class MessageCreate(BaseModel):
     channelId: int
     userId: int

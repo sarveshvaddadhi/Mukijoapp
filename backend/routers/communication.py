@@ -6,7 +6,7 @@ from database import get_db
 import models, schemas
 router = APIRouter(prefix="/api")
 
-# GET /api/channels
+
 @router.get("/channels")
 def get_channels(teamId: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
@@ -32,7 +32,7 @@ def get_channels(teamId: Optional[int] = Query(None), db: Session = Depends(get_
         print("Error fetching channels:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/channels
+
 @router.post("/channels", status_code=201)
 def create_channel(payload: dict, db: Session = Depends(get_db)):
     try:
@@ -68,7 +68,7 @@ def create_channel(payload: dict, db: Session = Depends(get_db)):
         print("Error creating channel:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/messages
+
 @router.get("/messages")
 def get_messages(teamId: int = Query(...), db: Session = Depends(get_db)):
     try:
@@ -78,7 +78,7 @@ def get_messages(teamId: int = Query(...), db: Session = Depends(get_db)):
         ).first()
 
         if not channel:
-            # Create a general channel if one doesn't exist
+
             channel = models.Channel(
                 name="General",
                 teamId=teamId,
@@ -108,7 +108,7 @@ def get_messages(teamId: int = Query(...), db: Session = Depends(get_db)):
         print("Messages GET Error:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/messages
+
 @router.post("/messages", status_code=201)
 def post_message(payload: schemas.MessageCreate, db: Session = Depends(get_db)):
     try:
@@ -139,7 +139,7 @@ def post_message(payload: schemas.MessageCreate, db: Session = Depends(get_db)):
         print("Messages POST Error:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/announcements
+
 @router.get("/announcements")
 def get_announcements(teamId: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
@@ -166,7 +166,7 @@ def get_announcements(teamId: Optional[int] = Query(None), db: Session = Depends
         print("Error fetching announcements:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/announcements
+
 @router.post("/announcements", status_code=201)
 def create_announcement(payload: schemas.AnnouncementCreate, db: Session = Depends(get_db)):
     try:
@@ -199,7 +199,7 @@ def create_announcement(payload: schemas.AnnouncementCreate, db: Session = Depen
         print("Error creating announcement:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/campaigns
+
 @router.get("/campaigns")
 def get_campaigns(teamId: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
@@ -245,7 +245,7 @@ def get_campaigns(teamId: Optional[int] = Query(None), db: Session = Depends(get
         print("Error fetching campaigns:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/campaigns
+
 @router.post("/campaigns", status_code=201)
 def create_campaign(payload: schemas.CampaignCreate, db: Session = Depends(get_db)):
     try:
@@ -281,7 +281,7 @@ def create_campaign(payload: schemas.CampaignCreate, db: Session = Depends(get_d
         print("Error creating campaign:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/campaigns/{id}/donate
+
 @router.post("/campaigns/{campaign_id}/donate", status_code=201)
 def donate_to_campaign(campaign_id: int, payload: schemas.DonationCreate, db: Session = Depends(get_db)):
     try:
@@ -297,7 +297,7 @@ def donate_to_campaign(campaign_id: int, payload: schemas.DonationCreate, db: Se
         )
         db.add(donation)
         
-        # Increment raised amount
+
         campaign.raised += payload.amount
 
         db.commit()
@@ -321,7 +321,7 @@ def donate_to_campaign(campaign_id: int, payload: schemas.DonationCreate, db: Se
         print("Error donating:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/polls
+
 @router.get("/polls")
 def get_polls(teamId: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
@@ -358,7 +358,7 @@ def get_polls(teamId: Optional[int] = Query(None), db: Session = Depends(get_db)
         print("Error fetching polls:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/polls
+
 @router.post("/polls", status_code=201)
 def create_poll(payload: schemas.PollCreate, db: Session = Depends(get_db)):
     try:
@@ -395,7 +395,7 @@ def create_poll(payload: schemas.PollCreate, db: Session = Depends(get_db)):
         print("Error creating poll:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/polls/{id}/vote
+
 @router.post("/polls/{poll_id}/vote")
 def vote_poll(poll_id: int, payload: schemas.PollVoteRequest, db: Session = Depends(get_db)):
     try:
@@ -432,7 +432,7 @@ def vote_poll(poll_id: int, payload: schemas.PollVoteRequest, db: Session = Depe
         print("Error voting:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/send-reminder
+
 @router.post("/send-reminder")
 def send_reminder(payload: dict):
     phone = payload.get("phone")

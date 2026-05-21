@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routers import auth, teams, events, attendance, payments, communication
 
-# Create tables in the database if they do not exist
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -12,16 +12,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Since rewrites will proxy request from the Next.js origin, CORS is relaxed.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register routers
+
 app.include_router(auth.router)
 app.include_router(teams.router)
 app.include_router(events.router)

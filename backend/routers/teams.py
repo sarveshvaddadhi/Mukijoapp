@@ -57,7 +57,7 @@ def serialize_team(team):
         }
     }
 
-# GET /api/teams
+
 @router.get("/teams")
 def get_teams(userId: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
@@ -71,7 +71,7 @@ def get_teams(userId: Optional[int] = Query(None), db: Session = Depends(get_db)
         print("Error fetching teams:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/teams
+
 @router.post("/teams", status_code=201)
 def create_team(payload: schemas.TeamCreate, db: Session = Depends(get_db)):
     try:
@@ -84,7 +84,7 @@ def create_team(payload: schemas.TeamCreate, db: Session = Depends(get_db)):
             description=payload.description
         )
         db.add(new_team)
-        db.flush() # Populate new_team.id
+        db.flush()
 
         if payload.userId:
             member = models.TeamMember(
@@ -104,7 +104,7 @@ def create_team(payload: schemas.TeamCreate, db: Session = Depends(get_db)):
         print("Error creating team:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/teams/default
+
 @router.get("/teams/default")
 def get_default_team(db: Session = Depends(get_db)):
     try:
@@ -125,14 +125,14 @@ def get_default_team(db: Session = Depends(get_db)):
         print("Error fetching default team:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/teams/{id}
+
 @router.get("/teams/{team_id}")
 def get_team(team_id: int, db: Session = Depends(get_db)):
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     
-    # Return formatted team
+
     events = sorted(team.events, key=lambda e: e.date)[:10]
     serialized_events = []
     for ev in events:
@@ -155,7 +155,7 @@ def get_team(team_id: int, db: Session = Depends(get_db)):
     res_team["events"] = serialized_events
     return {"team": res_team}
 
-# PUT /api/teams/{id}
+
 @router.put("/teams/{team_id}")
 def update_team(team_id: int, payload: schemas.TeamCreate, db: Session = Depends(get_db)):
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
@@ -169,7 +169,7 @@ def update_team(team_id: int, payload: schemas.TeamCreate, db: Session = Depends
     db.refresh(team)
     return {"team": serialize_team(team)}
 
-# DELETE /api/teams/{id}
+
 @router.delete("/teams/{team_id}")
 def delete_team(team_id: int, db: Session = Depends(get_db)):
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
@@ -179,7 +179,7 @@ def delete_team(team_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Team deleted"}
 
-# GET /api/teams/{id}/members
+
 @router.get("/teams/{team_id}/members")
 def get_team_members(team_id: int, db: Session = Depends(get_db)):
     members = db.query(models.TeamMember).filter(models.TeamMember.teamId == team_id).order_by(models.TeamMember.joinedAt.desc()).all()
@@ -220,7 +220,7 @@ def get_team_members(team_id: int, db: Session = Depends(get_db)):
         })
     return {"members": serialized}
 
-# POST /api/teams/{id}/members
+
 @router.post("/teams/{team_id}/members", status_code=201)
 def add_team_member(team_id: int, payload: schemas.MemberAdd, db: Session = Depends(get_db)):
     try:
@@ -232,7 +232,7 @@ def add_team_member(team_id: int, payload: schemas.MemberAdd, db: Session = Depe
             if not target_role:
                 target_role = user.role or "PLAYER"
         else:
-            # Create user stub
+
             salt = bcrypt.gensalt(10)
             temp_password = bcrypt.hashpw("member123".encode('utf-8'), salt).decode('utf-8')
             new_user = models.User(
@@ -286,7 +286,7 @@ def add_team_member(team_id: int, payload: schemas.MemberAdd, db: Session = Depe
         print("Error adding member:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# DELETE /api/teams/{id}/members
+
 @router.delete("/teams/{team_id}/members")
 def remove_team_member(team_id: int, userId: int = Query(...), db: Session = Depends(get_db)):
     member = db.query(models.TeamMember).filter(
@@ -300,11 +300,11 @@ def remove_team_member(team_id: int, userId: int = Query(...), db: Session = Dep
     db.commit()
     return {"message": "Member removed"}
 
-# POST /api/parent-links
+
 @router.post("/parent-links", status_code=201)
 def link_parent_child(payload: schemas.ParentLinkRequest, db: Session = Depends(get_db)):
     try:
-        # Check if already exists
+
         existing = db.query(models.ParentLink).filter(
             models.ParentLink.parentId == payload.parentId,
             models.ParentLink.childId == payload.childId
@@ -336,7 +336,7 @@ def link_parent_child(payload: schemas.ParentLinkRequest, db: Session = Depends(
         print("Error linking parent/child:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/parent-links
+
 @router.get("/parent-links")
 def get_parent_links(userId: int = Query(...), db: Session = Depends(get_db)):
     as_parent = db.query(models.ParentLink).filter(models.ParentLink.parentId == userId).all()
@@ -362,7 +362,7 @@ def get_parent_links(userId: int = Query(...), db: Session = Depends(get_db)):
 
     return {"children": children, "parents": parents}
 
-# DELETE /api/parent-links
+
 @router.delete("/parent-links")
 def unlink_parent_child(parentId: int = Query(...), childId: int = Query(...), db: Session = Depends(get_db)):
     link = db.query(models.ParentLink).filter(

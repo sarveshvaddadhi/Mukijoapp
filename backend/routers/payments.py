@@ -38,7 +38,7 @@ def serialize_payment(p):
         "user": {"id": p.user.id, "name": p.user.name, "email": p.user.email} if p.user else None
     }
 
-# GET /api/payments
+
 @router.get("/payments")
 def get_payments(
     userId: Optional[int] = Query(None),
@@ -50,7 +50,7 @@ def get_payments(
         user_ids = []
         
         if userId:
-            # check parent links
+
             children = db.query(models.ParentLink).filter(models.ParentLink.parentId == userId).all()
             if children:
                 user_ids = [userId] + [c.childId for c in children]
@@ -63,20 +63,20 @@ def get_payments(
 
         payments = query.order_by(models.Payment.createdAt.desc()).all()
 
-        # Aggregate summary stats
-        # Total PAID
+
+
         total_collected = db.query(func.sum(models.Payment.amount)).filter(models.Payment.status == "PAID")
         if userId:
             total_collected = total_collected.filter(models.Payment.userId.in_(user_ids))
         total_val = total_collected.scalar() or 0.0
 
-        # PENDING amount
+
         pending_amount = db.query(func.sum(models.Payment.amount)).filter(models.Payment.status == "PENDING")
         if userId:
             pending_amount = pending_amount.filter(models.Payment.userId.in_(user_ids))
         pending_val = pending_amount.scalar() or 0.0
 
-        # OVERDUE amount
+
         overdue_amount = db.query(func.sum(models.Payment.amount)).filter(models.Payment.status == "OVERDUE")
         if userId:
             overdue_amount = overdue_amount.filter(models.Payment.userId.in_(user_ids))
@@ -94,7 +94,7 @@ def get_payments(
         print("Error fetching payments:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/payments
+
 @router.post("/payments", status_code=201)
 def create_payment(payload: schemas.PaymentCreate, db: Session = Depends(get_db)):
     try:
@@ -116,7 +116,7 @@ def create_payment(payload: schemas.PaymentCreate, db: Session = Depends(get_db)
         print("Error creating payment:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/payments/{id}
+
 @router.get("/payments/{payment_id}")
 def get_payment(payment_id: int, db: Session = Depends(get_db)):
     p = db.query(models.Payment).filter(models.Payment.id == payment_id).first()
@@ -124,7 +124,7 @@ def get_payment(payment_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Payment not found")
     return {"payment": serialize_payment(p)}
 
-# PUT /api/payments/{id}
+
 @router.put("/payments/{payment_id}")
 def update_payment(payment_id: int, payload: schemas.PaymentUpdate, db: Session = Depends(get_db)):
     try:
@@ -146,7 +146,7 @@ def update_payment(payment_id: int, payload: schemas.PaymentUpdate, db: Session 
         print("Error updating payment:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/create-order
+
 @router.post("/create-order")
 def create_order(payload: dict):
     try:
@@ -184,7 +184,7 @@ def create_order(payload: dict):
         print("Razorpay Create Order Error:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
-# POST /api/verify-payment
+
 @router.post("/verify-payment")
 def verify_payment(payload: dict, db: Session = Depends(get_db)):
     try:
@@ -198,7 +198,7 @@ def verify_payment(payload: dict, db: Session = Depends(get_db)):
 
         secret = os.getenv("RAZORPAY_KEY_SECRET", "placeholder_secret")
         if secret not in ["placeholder_secret_key", "placeholder_secret"]:
-            # Verify signature
+
             msg = f"{razorpay_order_id}|{razorpay_payment_id}".encode("utf-8")
             generated = hmac.new(secret.encode("utf-8"), msg, hashlib.sha256).hexdigest()
             if generated != razorpay_signature:

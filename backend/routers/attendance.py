@@ -7,7 +7,7 @@ import models, schemas
 
 router = APIRouter(prefix="/api")
 
-# GET /api/attendance
+
 @router.get("/attendance")
 def get_attendance(
     eventId: Optional[int] = Query(None),
@@ -42,11 +42,11 @@ def get_attendance(
         print("Error fetching attendance:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/attendance
+
 @router.post("/attendance", status_code=201)
 def mark_attendance(payload: schemas.AttendanceCreate, db: Session = Depends(get_db)):
     try:
-        # Bulk:
+
         if payload.records is not None:
             results = []
             for rec in payload.records:
@@ -80,7 +80,7 @@ def mark_attendance(payload: schemas.AttendanceCreate, db: Session = Depends(get
                 })
             return {"records": serialized_records}
 
-        # Single:
+
         if not payload.eventId or not payload.userId:
             raise HTTPException(status_code=400, detail="eventId and userId required")
 
@@ -120,7 +120,7 @@ def mark_attendance(payload: schemas.AttendanceCreate, db: Session = Depends(get
         print("Error marking attendance:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/attendance/report
+
 @router.get("/attendance/report")
 def get_attendance_report(
     teamId: Optional[int] = Query(None),

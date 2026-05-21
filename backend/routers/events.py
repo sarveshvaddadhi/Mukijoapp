@@ -30,7 +30,7 @@ def serialize_event(ev):
         "rsvps": rsvps
     }
 
-# GET /api/events
+
 @router.get("/events")
 def get_events(teamId: Optional[int] = Query(None), userId: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
@@ -38,7 +38,7 @@ def get_events(teamId: Optional[int] = Query(None), userId: Optional[int] = Quer
         if teamId:
             query = query.filter(models.Event.teamId == teamId)
         if userId:
-            # Filter events of teams that the user is a member of
+
             query = query.join(models.Team).join(models.TeamMember).filter(models.TeamMember.userId == userId)
             
         events = query.order_by(models.Event.date.asc()).all()
@@ -47,7 +47,7 @@ def get_events(teamId: Optional[int] = Query(None), userId: Optional[int] = Quer
         print("Error fetching events:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/events
+
 @router.post("/events", status_code=201)
 def create_event(payload: schemas.EventCreate, db: Session = Depends(get_db)):
     try:
@@ -72,7 +72,7 @@ def create_event(payload: schemas.EventCreate, db: Session = Depends(get_db)):
         print("Error creating event:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# GET /api/events/{id}
+
 @router.get("/events/{event_id}")
 def get_event(event_id: int, db: Session = Depends(get_db)):
     ev = db.query(models.Event).filter(models.Event.id == event_id).first()
@@ -121,7 +121,7 @@ def get_event(event_id: int, db: Session = Depends(get_db)):
     }
     return {"event": event_data}
 
-# PUT /api/events/{id}
+
 @router.put("/events/{event_id}")
 def update_event(event_id: int, payload: dict, db: Session = Depends(get_db)):
     ev = db.query(models.Event).filter(models.Event.id == event_id).first()
@@ -149,7 +149,7 @@ def update_event(event_id: int, payload: dict, db: Session = Depends(get_db)):
     db.refresh(ev)
     return {"event": serialize_event(ev)}
 
-# DELETE /api/events/{id}
+
 @router.delete("/events/{event_id}")
 def delete_event(event_id: int, db: Session = Depends(get_db)):
     ev = db.query(models.Event).filter(models.Event.id == event_id).first()
@@ -159,7 +159,7 @@ def delete_event(event_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Event deleted"}
 
-# POST /api/events/rsvp
+
 @router.post("/events/rsvp")
 def post_general_rsvp(payload: schemas.RSVPCreate, db: Session = Depends(get_db)):
     try:
@@ -195,7 +195,7 @@ def post_general_rsvp(payload: schemas.RSVPCreate, db: Session = Depends(get_db)
         print("RSVP Error:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/events/{id}/rsvp
+
 @router.post("/events/{event_id}/rsvp")
 def post_event_rsvp(event_id: int, payload: dict, db: Session = Depends(get_db)):
     try:

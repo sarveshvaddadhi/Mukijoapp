@@ -23,7 +23,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def normalize_phone(phone: str) -> str:
     return re.sub(r"[^\d]", "", phone or "")
 
-# POST /api/auth/register
+
 @router.post("/auth/register")
 def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
     try:
@@ -35,13 +35,13 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
 
         cleaned_aadhaar = re.sub(r"\s+", "", payload.aadhaarNo)
 
-        # Check if email already exists
+
         existing = db.query(models.User).filter(models.User.email == payload.email).first()
         if existing:
             if existing.aadhaarVerified:
                 raise HTTPException(status_code=400, detail="An account with this email already exists.")
 
-            # Check if Aadhaar already exists on another user
+
             existing_aadhaar = db.query(models.User).filter(
                 models.User.aadhaarNo == cleaned_aadhaar,
                 models.User.email != payload.email
@@ -49,7 +49,7 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
             if existing_aadhaar:
                 raise HTTPException(status_code=400, detail="An account with this Aadhaar number already exists.")
 
-            # Update existing stub user
+
             existing.name = payload.name
             existing.phone = re.sub(r"\s+", "", payload.phone) if payload.phone else None
             existing.password = hash_password(payload.password)
@@ -63,12 +63,12 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
             user_dict.pop("password", None)
             return {"user": user_dict}
 
-        # Check if Aadhaar already exists on any user
+
         existing_aadhaar = db.query(models.User).filter(models.User.aadhaarNo == cleaned_aadhaar).first()
         if existing_aadhaar:
             raise HTTPException(status_code=400, detail="An account with this Aadhaar number already exists.")
 
-        # Create new user
+
         new_user = models.User(
             name=payload.name,
             email=payload.email,
@@ -92,7 +92,7 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
         print("Register error:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/auth/login
+
 @router.post("/auth/login")
 def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
     try:
@@ -122,7 +122,7 @@ def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
         print("Login error:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/auth/forgot-password
+
 @router.post("/auth/forgot-password")
 def forgot_password(payload: schemas.ForgotPassword, db: Session = Depends(get_db)):
     try:
@@ -140,7 +140,7 @@ def forgot_password(payload: schemas.ForgotPassword, db: Session = Depends(get_d
         print("Forgot password error:", e)
         raise HTTPException(status_code=500, detail="Server error")
 
-# POST /api/auth/send-aadhaar-otp
+
 @router.post("/auth/send-aadhaar-otp")
 def send_aadhaar_otp(payload: schemas.SendAadhaarOTP, db: Session = Depends(get_db)):
     try:
@@ -148,7 +148,7 @@ def send_aadhaar_otp(payload: schemas.SendAadhaarOTP, db: Session = Depends(get_
         if not re.match(r"^\d{12}$", cleaned_aadhaar):
             raise HTTPException(status_code=400, detail="Aadhaar number must be exactly 12 digits")
 
-        # Check if Aadhaar is already registered
+
         existing = db.query(models.User).filter(models.User.aadhaarNo == cleaned_aadhaar).first()
         if existing:
             raise HTTPException(status_code=400, detail="An account with this Aadhaar number already exists.")
@@ -166,7 +166,7 @@ def send_aadhaar_otp(payload: schemas.SendAadhaarOTP, db: Session = Depends(get_
         print("Send Aadhaar OTP Error:", e)
         raise HTTPException(status_code=500, detail="Server error during Aadhaar verification.")
 
-# POST /api/auth/verify-aadhaar-otp
+
 @router.post("/auth/verify-aadhaar-otp")
 def verify_aadhaar_otp(payload: schemas.VerifyAadhaarOTP):
     try:
@@ -194,7 +194,7 @@ def verify_aadhaar_otp(payload: schemas.VerifyAadhaarOTP):
         print("Verify Aadhaar OTP Error:", e)
         raise HTTPException(status_code=500, detail="Server error during Aadhaar verification.")
 
-# POST /api/auth/send-login-otp
+
 @router.post("/auth/send-login-otp")
 def send_login_otp(payload: schemas.SendLoginOTP, db: Session = Depends(get_db)):
     try:
@@ -213,7 +213,7 @@ def send_login_otp(payload: schemas.SendLoginOTP, db: Session = Depends(get_db))
         print("Send login OTP error:", e)
         raise HTTPException(status_code=500, detail="Server error sending login OTP.")
 
-# POST /api/auth/verify-login-otp
+
 @router.post("/auth/verify-login-otp")
 def verify_login_otp(payload: schemas.VerifyLoginOTP, db: Session = Depends(get_db)):
     try:
@@ -235,7 +235,7 @@ def verify_login_otp(payload: schemas.VerifyLoginOTP, db: Session = Depends(get_
         print("Verify login OTP error:", e)
         raise HTTPException(status_code=500, detail="Server error verifying login OTP.")
 
-# POST /api/send-otp
+
 @router.post("/send-otp")
 def send_otp(payload: dict):
     phone = payload.get("phone")
@@ -262,7 +262,7 @@ def send_otp(payload: dict):
         print("MSG91 Send OTP Error:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
-# POST /api/verify-otp
+
 @router.post("/verify-otp")
 def verify_otp(payload: dict):
     phone = payload.get("phone")
