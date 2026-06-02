@@ -3,27 +3,26 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-/* ─── Design tokens ──────────────────────────────────────────────── */
 export const T = {
-  bg:       "#F2F4F7",
-  card:     "#FFFFFF",
-  primary:  "#0057B8",
+  bg: "#F2F4F7",
+  card: "#FFFFFF",
+  primary: "#0057B8",
   primaryL: "#E8F0FB",
-  green:    "#00AA55",
-  red:      "#E53935",
-  text:     "#1C1C1E",
-  sub:      "#6B7280",
-  border:   "#E5E7EB",
-  shadow:   "0 1px 3px rgba(0,0,0,0.08)",
-  navH:     64,
+  green: "#00AA55",
+  red: "#E53935",
+  text: "#1C1C1E",
+  sub: "#6B7280",
+  border: "#E5E7EB",
+  shadow: "0 1px 3px rgba(0,0,0,0.08)",
+  navH: 64,
 };
 
 const NAV = [
-  { href: "/dashboard",   icon: HomeIcon,       label: "Home"       },
-  { href: "/events",      icon: CalIcon,        label: "Activities" },
-  { href: "__create__",   icon: PlusIcon,       label: ""           },
-  { href: "/groups",      icon: GroupIcon,      label: "Groups"     },
-  { href: "/more",        icon: MoreIcon,       label: "More"       },
+  { href: "/dashboard", icon: HomeIcon, label: "Home" },
+  { href: "/events", icon: CalIcon, label: "Activities" },
+  { href: "__create__", icon: PlusIcon, label: "" },
+  { href: "/groups", icon: GroupIcon, label: "Groups" },
+  { href: "/more", icon: MoreIcon, label: "More" },
 ];
 
 /* ─── Icons ──────────────────────────────────────────────────────── */
@@ -32,9 +31,9 @@ function HomeIcon({ active }) {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"
         stroke={active ? T.primary : T.sub} strokeWidth={active ? 2.2 : 1.8}
-        fill={active ? T.primaryL : "none"} strokeLinejoin="round"/>
+        fill={active ? T.primaryL : "none"} strokeLinejoin="round" />
       <rect x="9" y="14" width="6" height="7" rx="1"
-        stroke={active ? T.primary : T.sub} strokeWidth={active ? 2.2 : 1.8}/>
+        stroke={active ? T.primary : T.sub} strokeWidth={active ? 2.2 : 1.8} />
     </svg>
   );
 }
@@ -43,19 +42,19 @@ function CalIcon({ active }) {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <rect x="3" y="5" width="18" height="17" rx="2"
         stroke={active ? T.primary : T.sub} strokeWidth={active ? 2.2 : 1.8}
-        fill={active ? T.primaryL : "none"}/>
-      <line x1="3" y1="10" x2="21" y2="10" stroke={active ? T.primary : T.sub} strokeWidth="1.8"/>
-      <line x1="8" y1="3" x2="8" y2="7" stroke={active ? T.primary : T.sub} strokeWidth="2" strokeLinecap="round"/>
-      <line x1="16" y1="3" x2="16" y2="7" stroke={active ? T.primary : T.sub} strokeWidth="2" strokeLinecap="round"/>
-      <rect x="7" y="14" width="3" height="3" rx="0.5" fill={active ? T.primary : T.sub}/>
+        fill={active ? T.primaryL : "none"} />
+      <line x1="3" y1="10" x2="21" y2="10" stroke={active ? T.primary : T.sub} strokeWidth="1.8" />
+      <line x1="8" y1="3" x2="8" y2="7" stroke={active ? T.primary : T.sub} strokeWidth="2" strokeLinecap="round" />
+      <line x1="16" y1="3" x2="16" y2="7" stroke={active ? T.primary : T.sub} strokeWidth="2" strokeLinecap="round" />
+      <rect x="7" y="14" width="3" height="3" rx="0.5" fill={active ? T.primary : T.sub} />
     </svg>
   );
 }
 function PlusIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <line x1="14" y1="6" x2="14" y2="22" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="6" y1="14" x2="22" y2="14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="14" y1="6" x2="14" y2="22" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="6" y1="14" x2="22" y2="14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -63,18 +62,18 @@ function GroupIcon({ active }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <circle cx="9" cy="7" r="4" stroke={active ? T.primary : T.sub} strokeWidth={active ? 2.2 : 1.8}
-        fill={active ? T.primaryL : "none"}/>
-      <path d="M2 21c0-4 3.13-7 7-7" stroke={active ? T.primary : T.sub} strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round"/>
-      <circle cx="17" cy="9" r="3" stroke={active ? T.primary : T.sub} strokeWidth="1.8"/>
-      <path d="M15 21c0-3.3 2-5.5 5-5.5" stroke={active ? T.primary : T.sub} strokeWidth="1.8" strokeLinecap="round"/>
+        fill={active ? T.primaryL : "none"} />
+      <path d="M2 21c0-4 3.13-7 7-7" stroke={active ? T.primary : T.sub} strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" />
+      <circle cx="17" cy="9" r="3" stroke={active ? T.primary : T.sub} strokeWidth="1.8" />
+      <path d="M15 21c0-3.3 2-5.5 5-5.5" stroke={active ? T.primary : T.sub} strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
 function MoreIcon({ active }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      {[6,12,18].map(x => (
-        <circle key={x} cx={x} cy="12" r="1.8" fill={active ? T.primary : T.sub}/>
+      {[6, 12, 18].map(x => (
+        <circle key={x} cx={x} cy="12" r="1.8" fill={active ? T.primary : T.sub} />
       ))}
     </svg>
   );
@@ -83,7 +82,7 @@ function BellIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
-        stroke={T.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        stroke={T.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -92,19 +91,19 @@ function BellIcon() {
 function CreateModal({ onClose }) {
   const router = useRouter();
   const actions = [
-    { label: "New Event",       icon: "📅", href: "/events?create=true"   },
-    { label: "New Team",        icon: "👥", href: "/groups?create=true"   },
-    { label: "Record Payment",  icon: "💳", href: "/payments?create=true" },
-    { label: "Mark Attendance", icon: "✅", href: "/attendance"            },
-    { label: "Book Venue",      icon: "🏟️", href: "/venue"               },
-    { label: "Post Announcement", icon: "📢", href: "/communication"     },
+    { label: "New Event", icon: "📅", href: "/events?create=true" },
+    { label: "New Team", icon: "👥", href: "/groups?create=true" },
+    { label: "Record Payment", icon: "💳", href: "/payments?create=true" },
+    { label: "Mark Attendance", icon: "✅", href: "/attendance" },
+    { label: "Book Venue", icon: "🏟️", href: "/venue" },
+    { label: "Post Announcement", icon: "📢", href: "/communication" },
   ];
   return (
     <>
       <div onClick={onClose} style={{
         position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
         zIndex: 200, backdropFilter: "blur(3px)",
-      }}/>
+      }} />
       <div style={{
         position: "fixed", bottom: T.navH + 16, left: "50%", transform: "translateX(-50%)",
         width: "min(340px, calc(100vw - 32px))",
@@ -149,20 +148,20 @@ export default function MobileShell({ children, title, rightAction, noScroll }) 
   }, []);
 
   const pageTitle = title || {
-    "/dashboard":    "Home",
-    "/events":       "Activities",
-    "/groups":       "Groups",
-    "/messages":     "Chat",
-    "/more":         "More",
-    "/payments":     "Payments",
-    "/attendance":   "Attendance",
-    "/venue":        "Venues",
-    "/settlement":   "Settlement",
-    "/fundraising":  "Fundraising",
-    "/communication":"Communication",
-    "/calendar":     "Calendar",
-    "/discovery":    "Discover",
-    "/bookings":     "Bookings",
+    "/dashboard": "Home",
+    "/events": "Activities",
+    "/groups": "Groups",
+    "/messages": "Chat",
+    "/more": "More",
+    "/payments": "Payments",
+    "/attendance": "Attendance",
+    "/venue": "Venues",
+    "/settlement": "Settlement",
+    "/fundraising": "Fundraising",
+    "/communication": "Communication",
+    "/calendar": "Calendar",
+    "/discovery": "Discover",
+    "/bookings": "Bookings",
   }[pathname] || "Mukijo";
 
   return (
@@ -203,7 +202,7 @@ export default function MobileShell({ children, title, rightAction, noScroll }) 
             position: "relative", background: "none", border: "none",
             cursor: "pointer", padding: 4, borderRadius: 8,
           }}>
-            <BellIcon/>
+            <BellIcon />
             {notifCount > 0 && (
               <span style={{
                 position: "absolute", top: 0, right: 0,
@@ -268,7 +267,7 @@ export default function MobileShell({ children, title, rightAction, noScroll }) 
                 onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-10px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = "translateY(-6px)"; }}
               >
-                <PlusIcon/>
+                <PlusIcon />
               </button>
             );
           }
@@ -281,7 +280,7 @@ export default function MobileShell({ children, title, rightAction, noScroll }) 
               background: "none", border: "none", cursor: "pointer",
               flex: 1,
             }}>
-              <Icon active={active}/>
+              <Icon active={active} />
               <span style={{
                 fontSize: 10, fontWeight: active ? 700 : 500,
                 color: active ? T.primary : T.sub,
@@ -291,7 +290,7 @@ export default function MobileShell({ children, title, rightAction, noScroll }) 
                 <div style={{
                   position: "absolute", bottom: 6, width: 20, height: 3,
                   borderRadius: 2, background: T.primary,
-                }}/>
+                }} />
               )}
             </button>
           );
@@ -299,7 +298,7 @@ export default function MobileShell({ children, title, rightAction, noScroll }) 
       </nav>
 
       {/* ── Create Modal ── */}
-      {showCreate && <CreateModal onClose={() => setShowCreate(false)}/>}
+      {showCreate && <CreateModal onClose={() => setShowCreate(false)} />}
     </div>
   );
 }

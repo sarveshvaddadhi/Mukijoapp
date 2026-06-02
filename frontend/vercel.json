@@ -1,0 +1,10 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/events/:id",
+      "destination": "/events/1.html"
+    }
+  ]
+}
