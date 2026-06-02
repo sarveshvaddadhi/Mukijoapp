@@ -5,7 +5,10 @@ import Link from "next/link";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: "📊" },
+  { label: "Find Games", href: "/discovery", icon: "🔍" },
   { label: "Groups", href: "/groups", icon: "👥" },
+  { label: "Venue Bookings", href: "/bookings", icon: "🏟️" },
+  { label: "Venue Portal", href: "/venue", icon: "🏢" },
   { label: "Events", href: "/events", icon: "📋" },
   { label: "Calendar", href: "/calendar", icon: "📅" },
   { label: "Team Chat", href: "/messages", icon: "💬" },

@@ -2,11 +2,11 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import AppShell from "@/components/AppShell";
+import MobileShell, { T } from "@/components/MobileShell";
 
 export default function EventsPage() {
   return (
-    <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background: T.bg }}>Loading...</div>}>
       <EventsContent />
     </Suspense>
   );
@@ -20,7 +20,11 @@ function EventsContent() {
   const [teams, setTeams] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ title: "", type: "TRAINING", location: "", date: "", endTime: "", teamId: "", recurring: false, recurrence: "", description: "" });
+  const [activeFilter, setActiveFilter] = useState("upcoming");
+  const [form, setForm] = useState({
+    title: "", type: "TRAINING", location: "", date: "", endTime: "",
+    teamId: "", recurring: false, recurrence: "", description: "",
+  });
 
   useEffect(() => {
     const data = localStorage.getItem("mukijo_user");
@@ -43,9 +47,7 @@ function EventsContent() {
       setTeams(tmData.teams || []);
     } catch (e) { console.error(e); }
     setLoading(false);
-  };
-
-  const update = (f) => (e) => setForm(prev => ({ ...prev, [f]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+  }
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -78,154 +80,227 @@ function EventsContent() {
     } catch { alert("Error"); }
   };
 
-  const handleDelete = async (eventId) => {
-    if (!confirm("Delete this event?")) return;
-    await fetch(`/api/events/${eventId}`, { method: "DELETE" });
-    loadData(user.id);
-  };
-
   if (!user) return null;
 
-  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "13px", color: "#0f172a", background: "#fff", outline: "none", boxSizing: "border-box" };
+  const now = new Date();
+  const filtered = events.filter(ev => {
+    const evDate = new Date(ev.date);
+    if (activeFilter === "upcoming") return evDate >= now;
+    if (activeFilter === "past") return evDate < now;
+    return true;
+  }).sort((a, b) => activeFilter === "past"
+    ? new Date(b.date) - new Date(a.date)
+    : new Date(a.date) - new Date(b.date)
+  );
 
-  const typeColors = { MATCH: { bg: "#fef2f2", color: "#dc2626", label: "Match" }, TRAINING: { bg: "#f0fdf4", color: "#16a34a", label: "Training" }, MEETING: { bg: "#e0e7ff", color: "#4f46e5", label: "Meeting" } };
+  const myRsvp = ev => ev.rsvps?.find(r => r.userId === user.id)?.status;
+  const rsvpCount = (ev, st) => ev.rsvps?.filter(r => r.status === st).length || 0;
+  const typeColors = {
+    TRAINING: "#0057B8", MATCH: "#DC2626", TOURNAMENT: "#7C3AED",
+    MEETING: "#D97706", FRIENDLY: "#059669",
+  };
+  const inputStyle = {
+    width: "100%", padding: "11px 13px", borderRadius: 10,
+    border: `1.5px solid ${T.border}`, fontSize: 14, color: T.text,
+    background: "#fff", outline: "none", boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
 
   return (
-    <AppShell searchPlaceholder="Search events...">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-        <div>
-          <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a" }}>Events</h1>
-          <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>{events.length} upcoming events</p>
-        </div>
-        <button onClick={() => setShowForm(!showForm)} style={{ padding: "10px 20px", borderRadius: "10px", background: "#4f46e5", color: "#fff", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
-          {showForm ? "Cancel" : "+ Create Event"}
-        </button>
-      </div>
-
+    <MobileShell title="Activities" rightAction={
+      <button onClick={() => setShowForm(v => !v)} style={{
+        background: showForm ? "#FEF2F2" : T.primary, color: showForm ? T.red : "#fff",
+        border: "none", borderRadius: 10, padding: "6px 14px",
+        fontSize: 12, fontWeight: 700, cursor: "pointer",
+      }}>
+        {showForm ? "✕ Cancel" : "+ Event"}
+      </button>
+    }>
       {/* Create Form */}
       {showForm && (
-        <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "24px", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "16px" }}>New Event</h2>
-          <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <div style={{ gridColumn: "span 2" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Title *</label>
-              <input value={form.title} onChange={update("title")} placeholder="e.g. U-19 Training Session" style={inputStyle} required />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Type</label>
-              <select value={form.type} onChange={update("type")} style={inputStyle}>
-                <option value="TRAINING">Training</option>
-                <option value="MATCH">Match</option>
-                <option value="MEETING">Meeting</option>
+        <div style={{
+          background: T.card, borderRadius: 16, padding: "18px 16px",
+          boxShadow: T.shadow, marginBottom: 16,
+        }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: T.text, marginBottom: 14 }}>New Event</h2>
+          <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              placeholder="Event title *" style={inputStyle} required/>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={inputStyle}>
+                {["TRAINING","MATCH","TOURNAMENT","MEETING","FRIENDLY"].map(t =>
+                  <option key={t} value={t}>{t}</option>
+                )}
               </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Team *</label>
-              <select value={form.teamId} onChange={update("teamId")} style={inputStyle} required>
-                <option value="">Select team</option>
+              <select value={form.teamId} onChange={e => setForm(f => ({ ...f, teamId: e.target.value }))} style={inputStyle} required>
+                <option value="">Select team *</option>
                 {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Start Date & Time *</label>
-              <input type="datetime-local" value={form.date} onChange={update("date")} style={inputStyle} required />
+
+            <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+              placeholder="Location / Venue" style={inputStyle}/>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Start Date & Time *</label>
+                <input type="datetime-local" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={inputStyle} required/>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>End Time</label>
+                <input type="time" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} style={inputStyle}/>
+              </div>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>End Time</label>
-              <input type="datetime-local" value={form.endTime} onChange={update("endTime")} style={inputStyle} />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Location</label>
-              <input value={form.location} onChange={update("location")} placeholder="e.g. North Stadium, Pitch 4" style={inputStyle} />
-            </div>
-            <div>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 500, color: "#374151", cursor: "pointer", marginTop: "20px" }}>
-                <input type="checkbox" checked={form.recurring} onChange={update("recurring")} />
-                Recurring event
-              </label>
-              {form.recurring && (
-                <select value={form.recurrence} onChange={update("recurrence")} style={{ ...inputStyle, marginTop: "8px" }}>
-                  <option value="">Frequency</option>
-                  <option value="WEEKLY">Weekly</option>
-                  <option value="MONTHLY">Monthly</option>
-                </select>
-              )}
-            </div>
-            <div style={{ gridColumn: "span 2" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Description</label>
-              <textarea value={form.description} onChange={update("description")} rows={2} placeholder="Event details..." style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }} />
-            </div>
-            <div style={{ gridColumn: "span 2" }}>
-              <button type="submit" style={{ padding: "11px 28px", borderRadius: "10px", background: "#4f46e5", color: "#fff", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>Create Event</button>
-            </div>
+
+            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="Description (optional)" rows={2}
+              style={{ ...inputStyle, resize: "vertical" }}/>
+
+            <button type="submit" style={{
+              padding: "12px", borderRadius: 12, background: T.primary,
+              color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer",
+            }}>Create Event</button>
           </form>
         </div>
       )}
 
+      {/* Filters */}
+      <div style={{
+        display: "flex", gap: 8, marginBottom: 14,
+        background: T.card, borderRadius: 12, padding: 4,
+        boxShadow: T.shadow,
+      }}>
+        {[["upcoming","Upcoming"],["past","Past"],["all","All"]].map(([key, label]) => (
+          <button key={key} onClick={() => setActiveFilter(key)} style={{
+            flex: 1, padding: "8px", borderRadius: 9, border: "none",
+            fontSize: 12, fontWeight: 600, cursor: "pointer",
+            background: activeFilter === key ? T.primary : "transparent",
+            color: activeFilter === key ? "#fff" : T.sub,
+            transition: "all 0.15s",
+          }}>{label}</button>
+        ))}
+      </div>
+
       {/* Events List */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "#94a3b8" }}>Loading events...</div>
-      ) : events.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "#94a3b8" }}>
-          <div style={{ fontSize: "48px", marginBottom: "12px" }}>📅</div>
-          <p style={{ fontSize: "15px", fontWeight: 600 }}>No events yet</p>
-          <p style={{ fontSize: "13px", marginTop: "4px" }}>Create your first event to get started</p>
+        <div style={{ textAlign: "center", paddingTop: 60, color: T.sub }}>Loading events...</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ background: T.card, borderRadius: 16, padding: "40px 20px", textAlign: "center", boxShadow: T.shadow }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>📅</div>
+          <p style={{ fontSize: 14, color: T.sub }}>No {activeFilter} events</p>
+          <button onClick={() => setShowForm(true)} style={{
+            marginTop: 12, padding: "9px 20px", borderRadius: 10,
+            background: T.primary, color: "#fff", border: "none",
+            fontSize: 13, fontWeight: 600, cursor: "pointer",
+          }}>+ Create Event</button>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {events.map(ev => {
-            const tc = typeColors[ev.type] || typeColors.TRAINING;
-            const userRsvp = ev.rsvps?.find(r => r.userId === user.id);
-            const goingCount = ev.rsvps?.filter(r => r.status === "GOING").length || 0;
-            const d = new Date(ev.date);
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {filtered.map(ev => {
+            const myStatus = myRsvp(ev);
+            const typeColor = typeColors[ev.type] || T.primary;
             return (
-              <div key={ev.id} style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "20px", borderLeft: `4px solid ${tc.color}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-                      <span style={{ background: tc.bg, color: tc.color, fontSize: "10px", fontWeight: 700, padding: "3px 10px", borderRadius: "99px" }}>{tc.label}</span>
-                      <span style={{ fontSize: "12px", color: "#94a3b8" }}>{ev.team?.name}</span>
-                      {ev.recurring && <span style={{ fontSize: "10px", color: "#d97706", fontWeight: 600 }}>🔄 Recurring</span>}
+              <div key={ev.id} style={{
+                background: T.card, borderRadius: 16, overflow: "hidden",
+                boxShadow: T.shadow,
+              }}>
+                {/* Color strip */}
+                <div style={{ height: 4, background: typeColor }}/>
+                <div style={{ padding: "14px 14px" }}>
+                  <div onClick={() => router.push(`/events/${ev.id}`)} style={{ cursor: "pointer" }}>
+                    {/* Header row */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99,
+                            background: typeColor + "18", color: typeColor,
+                          }}>{ev.type?.replace("_", " ")}</span>
+                          {ev.team?.name && (
+                            <span style={{ fontSize: 11, color: T.sub }}>· {ev.team.name}</span>
+                          )}
+                        </div>
+                        <h3 style={{ fontSize: 15, fontWeight: 800, color: T.text }}>{ev.title}</h3>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 10 }}>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: T.primary }}>
+                          {new Date(ev.date).getDate()}
+                        </div>
+                        <div style={{ fontSize: 10, color: T.sub, textTransform: "uppercase" }}>
+                          {new Date(ev.date).toLocaleDateString("en-IN", { month: "short", weekday: "short" }).replace(",", " ")}
+                        </div>
+                      </div>
                     </div>
-                    <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>{ev.title}</h3>
-                    <div style={{ display: "flex", gap: "16px", marginTop: "8px", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "4px" }}>
-                        📅 {d.toLocaleDateString("en-IN", { weekday: "short", month: "short", day: "numeric" })} · {d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+
+                    {/* Details */}
+                    <div style={{ display: "flex", gap: 14, marginBottom: 10 }}>
+                      <span style={{ fontSize: 12, color: T.sub }}>
+                        🕐 {new Date(ev.date).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                       </span>
-                      {ev.location && <span style={{ fontSize: "12px", color: "#64748b" }}>📍 {ev.location}</span>}
-                      <span style={{ fontSize: "12px", color: "#64748b" }}>✅ {goingCount} going</span>
+                      {ev.location && <span style={{ fontSize: 12, color: T.sub }}>📍 {ev.location}</span>}
                     </div>
-                    {ev.description && <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "6px" }}>{ev.description}</p>}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "flex-end" }}>
-                    <div style={{ fontSize: "20px", fontWeight: 800, color: tc.color }}>{d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</div>
-                    <button onClick={() => handleDelete(ev.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: "11px" }}>Delete</button>
+
+                  {/* RSVP counts */}
+                  <div style={{ display: "flex", gap: 14, marginBottom: 12 }}>
+                    {[
+                      { st: "GOING",     label: "Going",   color: "#00AA55" },
+                      { st: "NOT_GOING", label: "No",      color: T.red     },
+                      { st: "PENDING",   label: "Waiting", color: T.sub     },
+                    ].map(r => (
+                      <span key={r.st} style={{ fontSize: 12, color: r.color, fontWeight: 600 }}>
+                        {rsvpCount(ev, r.st)} {r.label}
+                      </span>
+                    ))}
                   </div>
-                </div>
-                {/* RSVP Buttons */}
-                <div style={{ display: "flex", gap: "8px", marginTop: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                  {["GOING", "MAYBE", "NOT_GOING"].map(s => {
-                    const active = userRsvp?.status === s;
-                    const colors = { GOING: "#16a34a", MAYBE: "#d97706", NOT_GOING: "#dc2626" };
-                    const labels = { GOING: "✓ Going", MAYBE: "? Maybe", NOT_GOING: "✗ Not Going" };
-                    return (
-                      <button key={s} onClick={() => handleRSVP(ev.id, s)} style={{
-                        padding: "7px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
-                        border: `1.5px solid ${active ? colors[s] : "#e2e8f0"}`,
-                        background: active ? colors[s] + "15" : "#fff",
-                        color: active ? colors[s] : "#64748b",
-                        transition: "all 0.15s",
-                      }}>
-                        {labels[s]}
-                      </button>
-                    );
-                  })}
+
+                  {/* RSVP Buttons */}
+                  <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                    {[
+                      { st: "GOING",     label: "✓ Going",    bg: "#00AA55", activeBg: "#E8F9F2", activeColor: "#00AA55" },
+                      { st: "NOT_GOING", label: "✗ Not Going", bg: T.red,    activeBg: "#FEF2F2", activeColor: T.red },
+                      { st: "MAYBE",     label: "? Maybe",    bg: "#8B5CF6", activeBg: "#F5F3FF", activeColor: "#8B5CF6" },
+                    ].map(r => {
+                      const isActive = myStatus === r.st;
+                      return (
+                        <button key={r.st} onClick={() => handleRSVP(ev.id, r.st)} style={{
+                          flex: 1, padding: "8px 4px", borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                          border: `1.5px solid ${isActive ? r.bg : T.border}`,
+                          background: isActive ? r.activeBg : "#fff",
+                          color: isActive ? r.activeColor : T.sub,
+                          transition: "all 0.15s",
+                        }}>
+                          {r.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Cross-module actions */}
+                  <div style={{ display: "flex", gap: 8, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
+                    <button onClick={() => router.push(`/attendance?eventId=${ev.id}`)} style={{
+                      flex: 1, padding: "7px 8px", borderRadius: 8,
+                      background: T.primaryL, color: T.primary,
+                      border: "none", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                    }}>✅ Attendance</button>
+                    <button onClick={() => router.push(`/payments?type=EVENT&eventRef=${ev.title}`)} style={{
+                      flex: 1, padding: "7px 8px", borderRadius: 8,
+                      background: "#F0FDF4", color: "#00AA55",
+                      border: "none", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                    }}>💳 Collect Fees</button>
+                    <button onClick={() => router.push(`/messages`)} style={{
+                      flex: 1, padding: "7px 8px", borderRadius: 8,
+                      background: "#FFF7ED", color: "#D97706",
+                      border: "none", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                    }}>💬 Discuss</button>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       )}
-    </AppShell>
+    </MobileShell>
   );
 }

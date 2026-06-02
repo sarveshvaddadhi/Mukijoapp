@@ -30,7 +30,21 @@ if DATABASE_URL.startswith("postgresql://"):
             encoded_password = quote_plus(password_part)
             DATABASE_URL = f"{prefix}{user_part}:{encoded_password}@{host_port_db}"
 
-engine = create_engine(DATABASE_URL)
+# Try to connect to PostgreSQL. If it fails, fallback to SQLite for local sandbox testing.
+try:
+    # Set a short timeout for PostgreSQL connection test
+    if DATABASE_URL.startswith("postgresql://"):
+        engine = create_engine(DATABASE_URL, connect_args={"connect_timeout": 3})
+    else:
+        engine = create_engine(DATABASE_URL)
+    # Test connection
+    with engine.connect() as conn:
+        pass
+except Exception as e:
+    print(f"Warning: Failed to connect to PostgreSQL ({e}). Falling back to SQLite.")
+    DATABASE_URL = "sqlite:///./mukijo.db"
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

@@ -13,6 +13,8 @@ class User(Base):
     phone = Column(String, nullable=True)
     aadhaarNo = Column(String, unique=True, nullable=True)
     aadhaarVerified = Column(Boolean, default=False, nullable=False)
+    google_id = Column(String, unique=True, nullable=True)
+    avatar_url = Column(String, nullable=True)
     createdAt = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
     teamMembers = relationship("TeamMember", back_populates="user", cascade="all, delete-orphan")
@@ -37,6 +39,11 @@ class Team(Base):
     division = Column(String, nullable=True)
     status = Column(String, default="ACTIVE", nullable=False)
     description = Column(String, nullable=True)
+    sport_id = Column(String, ForeignKey("Sport.id"), nullable=True)
+    team_type = Column(String, nullable=True)
+    age_group = Column(String, nullable=True)
+    visibility = Column(String, default="PRIVATE", nullable=False)
+    venue_id = Column(Integer, ForeignKey("Venue.id"), nullable=True)
     createdAt = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
     members = relationship("TeamMember", back_populates="team", cascade="all, delete-orphan")
@@ -45,6 +52,8 @@ class Team(Base):
     announcements = relationship("Announcement", back_populates="team", cascade="all, delete-orphan")
     campaigns = relationship("Campaign", back_populates="team", cascade="all, delete-orphan")
     polls = relationship("Poll", back_populates="team", cascade="all, delete-orphan")
+    sport = relationship("Sport", back_populates="teams")
+    venue = relationship("Venue", back_populates="teams")
 
 
 class TeamMember(Base):
@@ -273,3 +282,67 @@ class PollVote(Base):
     __table_args__ = (
         UniqueConstraint("pollId", "userId", name="PollVote_pollId_userId_key"),
     )
+
+
+class Sport(Base):
+    __tablename__ = "Sport"
+
+    id = Column(String, primary_key=True)  # e.g., 'football'
+    name = Column(String, nullable=False)
+    slug = Column(String, unique=True, nullable=False)
+    icon_url = Column(String, nullable=True)
+    accent_color = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+
+    venues = relationship("VenueSport", back_populates="sport", cascade="all, delete-orphan")
+    teams = relationship("Team", back_populates="sport")
+
+
+class Venue(Base):
+    __tablename__ = "Venue"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    lat = Column(Float, nullable=True)
+    lng = Column(Float, nullable=True)
+    rating = Column(Float, default=0.0)
+    description = Column(String, nullable=True)
+    contact_phone = Column(String, nullable=True)
+    website_url = Column(String, nullable=True)
+    is_available = Column(Boolean, default=True)
+    createdAt = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+    sports = relationship("VenueSport", back_populates="venue", cascade="all, delete-orphan")
+    teams = relationship("Team", back_populates="venue")
+    bookings = relationship("VenueBooking", back_populates="venue", cascade="all, delete-orphan")
+
+
+class VenueSport(Base):
+    __tablename__ = "VenueSport"
+
+    venue_id = Column(Integer, ForeignKey("Venue.id", ondelete="CASCADE"), primary_key=True)
+    sport_id = Column(String, ForeignKey("Sport.id", ondelete="CASCADE"), primary_key=True)
+
+    venue = relationship("Venue", back_populates="sports")
+    sport = relationship("Sport", back_populates="venues")
+
+
+class VenueBooking(Base):
+    __tablename__ = "VenueBooking"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    venue_id = Column(Integer, ForeignKey("Venue.id", ondelete="CASCADE"), nullable=False)
+    team_id = Column(Integer, ForeignKey("Team.id", ondelete="CASCADE"), nullable=False)
+    booker_id = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    purpose = Column(String, nullable=True)
+    status = Column(String, default="CONFIRMED", nullable=False)
+    createdAt = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+    venue = relationship("Venue", back_populates="bookings")
+    team = relationship("Team")
+    booker = relationship("User")
+
+

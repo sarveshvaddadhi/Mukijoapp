@@ -81,22 +81,65 @@ def create_team(payload: schemas.TeamCreate, db: Session = Depends(get_db)):
         new_team = models.Team(
             name=payload.name,
             division=payload.division,
-            description=payload.description
+            description=payload.description,
+            sport_id=payload.sport_id,
+            team_type=payload.team_type,
+            age_group=payload.age_group,
+            visibility=payload.visibility or "PRIVATE",
+            venue_id=payload.venue_id
         )
         db.add(new_team)
         db.flush()
 
+        # The creator is an ADMIN
         if payload.userId:
             member = models.TeamMember(
                 userId=payload.userId,
                 teamId=new_team.id,
-                role="COACH"
+                role="ADMIN"
             )
             db.add(member)
+            
+        # Process invited members
+        if payload.members:
+            for m in payload.members:
+                email = m.get("email_or_phone") or m.get("email")
+                role = m.get("role", "PLAYER")
+                if not email:
+                    continue
+                
+                # Check if user exists
+                user = db.query(models.User).filter(models.User.email == email).first()
+                if not user:
+                    # Create placeholder user
+                    salt = bcrypt.gensalt(10)
+                    temp_password = bcrypt.hashpw("member123".encode('utf-8'), salt).decode('utf-8')
+                    user = models.User(
+                        name=email.split("@")[0],
+                        email=email,
+                        password=temp_password,
+                        role=role,
+                        aadhaarVerified=False
+                    )
+                    db.add(user)
+                    db.flush()
+                
+                # Add team member link
+                new_member = models.TeamMember(
+                    userId=user.id,
+                    teamId=new_team.id,
+                    role=role
+                )
+                db.add(new_member)
+                # Here we would normally send an invite email/SMS
+                print(f"Invite sent to {email} for role {role}")
 
         db.commit()
         db.refresh(new_team)
-        return {"team": serialize_team(new_team)}
+        
+        # Return standard format with extra data
+        res = serialize_team(new_team)
+        return {"team": res, "team_id": new_team.id, "invite_links": []}
     except HTTPException as he:
         raise he
     except Exception as e:

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AppShell from "@/components/AppShell";
+import MobileShell, { T } from "@/components/MobileShell";
 
 const DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -78,55 +78,49 @@ export default function CalendarPage() {
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else setMonth(m => m + 1); setSelectedDate(1); };
 
   return (
-    <AppShell searchPlaceholder="Search events, players...">
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "20px", alignItems: "start" }}>
+    <MobileShell title="Calendar">
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {/* Calendar Panel */}
-        <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-          <div style={{ padding: "20px 24px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a" }}>{MONTHS[month]}</div>
-              <div style={{ fontSize: "15px", fontWeight: 600, color: "#64748b" }}>{year}</div>
+        <div style={{ background: T.card, borderRadius: 16, boxShadow: T.shadow, overflow: "hidden" }}>
+          <div style={{ padding: "14px 14px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: T.text }}>{MONTHS[month]}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.sub }}>{year}</div>
             </div>
-            <div style={{ display: "flex", gap: "6px" }}>
-              <button onClick={prevMonth} style={{ width: "32px", height: "32px", border: "1px solid #e2e8f0", background: "#fff", borderRadius: "8px", cursor: "pointer", color: "#64748b", fontSize: "16px" }}>‹</button>
-              <button onClick={nextMonth} style={{ width: "32px", height: "32px", border: "1px solid #e2e8f0", background: "#fff", borderRadius: "8px", cursor: "pointer", color: "#64748b", fontSize: "16px" }}>›</button>
-            </div>
-            <div style={{ marginLeft: "auto", display: "flex", gap: "0", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden" }}>
-              {["Month", "Week"].map(v => (
-                <button key={v} onClick={() => setView(v)} style={{ padding: "8px 18px", border: "none", background: view === v ? "#4f46e5" : "#fff", color: view === v ? "#fff" : "#64748b", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>{v}</button>
-              ))}
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={prevMonth} style={{ width: 32, height: 32, border: `1px solid ${T.border}`, background: T.card, borderRadius: 8, cursor: "pointer", color: T.sub, fontSize: 16 }}>‹</button>
+              <button onClick={nextMonth} style={{ width: 32, height: 32, border: `1px solid ${T.border}`, background: T.card, borderRadius: 8, cursor: "pointer", color: T.sub, fontSize: 16 }}>›</button>
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", padding: "12px 16px 0" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", padding: "10px 10px 0" }}>
             {DAYS.map(d => (
-              <div key={d} style={{ textAlign: "center", fontSize: "11px", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px", padding: "4px" }}>{d}</div>
+              <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: T.sub, letterSpacing: 0.5, padding: 4 }}>{d}</div>
             ))}
           </div>
 
-          <div style={{ padding: "0 16px 16px" }}>
+          <div style={{ padding: "0 10px 10px" }}>
             {weeks.map((week, wi) => (
-              <div key={wi} style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
+              <div key={wi} style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
                 {week.map((day, di) => {
                   const dayEvents = getEventsForDay(day);
                   const isSelected = day === selectedDate;
                   return (
                     <div key={di} onClick={() => day && setSelectedDate(day)} style={{
-                      minHeight: "70px", borderRadius: "10px", padding: "6px",
+                      minHeight: 54, borderRadius: 8, padding: 4,
                       cursor: day ? "pointer" : "default",
-                      background: isSelected ? "#e0e7ff" : isToday(day) ? "#fefce8" : "transparent",
-                      border: isSelected ? "1.5px solid #4f46e5" : "1.5px solid transparent",
-                      transition: "all 0.15s",
+                      background: isSelected ? T.primaryL : isToday(day) ? "#FFFBEB" : "transparent",
+                      border: isSelected ? `1.5px solid ${T.primary}` : "1.5px solid transparent",
                     }}>
                       {day && (
                         <>
-                          <div style={{ fontSize: "13px", fontWeight: isSelected || isToday(day) ? 700 : 500, color: isSelected ? "#4f46e5" : isToday(day) ? "#d97706" : "#0f172a", marginBottom: "3px" }}>{day}</div>
+                          <div style={{ fontSize: 12, fontWeight: isSelected || isToday(day) ? 700 : 500, color: isSelected ? T.primary : isToday(day) ? "#D97706" : T.text, marginBottom: 2 }}>{day}</div>
                           {dayEvents.slice(0, 2).map((ev, ei) => (
-                            <div key={ei} style={{ background: (typeColors[ev.type] || "#64748b") + "20", borderLeft: `2px solid ${typeColors[ev.type] || "#64748b"}`, color: typeColors[ev.type] || "#64748b", fontSize: "9px", fontWeight: 600, padding: "1px 4px", borderRadius: "0 3px 3px 0", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {ev.title.substring(0, 12)}...
+                            <div key={ei} style={{ background: (typeColors[ev.type] || T.sub) + "20", borderLeft: `2px solid ${typeColors[ev.type] || T.sub}`, color: typeColors[ev.type] || T.sub, fontSize: 8, fontWeight: 600, padding: "1px 3px", borderRadius: "0 2px 2px 0", marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {ev.title.substring(0, 10)}
                             </div>
                           ))}
-                          {dayEvents.length > 2 && <div style={{ fontSize: "9px", color: "#94a3b8" }}>+{dayEvents.length - 2} more</div>}
+                          {dayEvents.length > 2 && <div style={{ fontSize: 8, color: T.sub }}>+{dayEvents.length - 2}</div>}
                         </>
                       )}
                     </div>
@@ -137,50 +131,45 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* Right Panel */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "20px" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", marginBottom: "4px" }}>
-              {MONTHS[month]} {selectedDate}, {year}
-            </h3>
-            <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "14px" }}>{selectedEvents.length} event{selectedEvents.length !== 1 ? "s" : ""}</p>
+        {/* Selected Day Events */}
+        <div style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, padding: 14 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>
+            {MONTHS[month]} {selectedDate}, {year}
+          </h3>
+          <p style={{ fontSize: 12, color: T.sub, marginBottom: 12 }}>{selectedEvents.length} event{selectedEvents.length !== 1 ? "s" : ""}</p>
 
-            {selectedEvents.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "20px", color: "#94a3b8", fontSize: "13px" }}>No events on this day</div>
-            ) : selectedEvents.map(ev => {
-              const d = new Date(ev.date);
-              const goingCount = ev.rsvps?.filter(r => r.status === "GOING").length || 0;
-              const myRsvp = ev.rsvps?.find(r => r.userId === user.id)?.status || "PENDING";
-              return (
-                <div key={ev.id} style={{ padding: "14px", borderRadius: "10px", background: "#f8fafc", borderLeft: `3px solid ${typeColors[ev.type] || "#64748b"}`, marginBottom: "10px" }}>
-                  <span style={{ fontSize: "10px", fontWeight: 700, color: typeColors[ev.type], textTransform: "uppercase", letterSpacing: "0.5px" }}>{ev.type}</span>
-                  <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", marginTop: "4px" }}>{ev.title}</h4>
-                  <div style={{ fontSize: "12px", color: "#64748b", marginTop: "6px", display: "flex", flexDirection: "column", gap: "3px" }}>
-                    <span>🕐 {d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}{ev.endTime ? ` – ${new Date(ev.endTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : ""}</span>
-                    {ev.location && <span>📍 {ev.location}</span>}
-                    <span>👥 {ev.team?.name} · {goingCount} going</span>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                    <button onClick={() => handleRsvp(ev.id, "GOING")} style={{ flex: 1, padding: "8px", borderRadius: "8px", border: myRsvp === "GOING" ? "1.5px solid #16a34a" : "1px solid #cbd5e1", background: myRsvp === "GOING" ? "#dcfce7" : "#fff", color: myRsvp === "GOING" ? "#16a34a" : "#475569", fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>✅ Going</button>
-                    <button onClick={() => handleRsvp(ev.id, "NOT_GOING")} style={{ flex: 1, padding: "8px", borderRadius: "8px", border: myRsvp === "NOT_GOING" ? "1.5px solid #dc2626" : "1px solid #cbd5e1", background: myRsvp === "NOT_GOING" ? "#fee2e2" : "#fff", color: myRsvp === "NOT_GOING" ? "#dc2626" : "#475569", fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>❌ Can&apos;t go</button>
-                  </div>
+          {selectedEvents.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "20px", color: T.sub, fontSize: 13 }}>No events on this day</div>
+          ) : selectedEvents.map(ev => {
+            const d = new Date(ev.date);
+            const goingCount = ev.rsvps?.filter(r => r.status === "GOING").length || 0;
+            const myRsvp = ev.rsvps?.find(r => r.userId === user.id)?.status || "PENDING";
+            return (
+              <div key={ev.id} style={{ padding: 12, borderRadius: 10, background: T.bg, borderLeft: `3px solid ${typeColors[ev.type] || T.sub}`, marginBottom: 10 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: typeColors[ev.type], textTransform: "uppercase", letterSpacing: 0.5 }}>{ev.type}</span>
+                <h4 style={{ fontSize: 14, fontWeight: 700, color: T.text, marginTop: 4 }}>{ev.title}</h4>
+                <div style={{ fontSize: 12, color: T.sub, marginTop: 6, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span>🕐 {d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                  {ev.location && <span>📍 {ev.location}</span>}
+                  <span>👥 {ev.team?.name} · {goingCount} going</span>
                 </div>
-              );
-            })}
-          </div>
+                <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                  <button onClick={() => handleRsvp(ev.id, "GOING")} style={{ flex: 1, padding: 7, borderRadius: 8, border: myRsvp === "GOING" ? `1.5px solid #00AA55` : `1px solid ${T.border}`, background: myRsvp === "GOING" ? "#E8F9F2" : T.card, color: myRsvp === "GOING" ? "#00AA55" : T.sub, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>✅ Going</button>
+                  <button onClick={() => handleRsvp(ev.id, "NOT_GOING")} style={{ flex: 1, padding: 7, borderRadius: 8, border: myRsvp === "NOT_GOING" ? `1.5px solid ${T.red}` : `1px solid ${T.border}`, background: myRsvp === "NOT_GOING" ? "#FEF2F2" : T.card, color: myRsvp === "NOT_GOING" ? T.red : T.sub, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>❌ Can&apos;t go</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-          {/* Google Calendar Placeholder */}
-          <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "20px", textAlign: "center" }}>
-            <div style={{ fontSize: "28px", marginBottom: "8px" }}>📅</div>
-            <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>Sync Calendar</h4>
-            <p style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "12px" }}>Connect your Google Calendar</p>
-            <button style={{ padding: "8px 20px", borderRadius: "8px", background: "#f1f5f9", color: "#374151", border: "1px solid #e2e8f0", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-              🔗 Connect Google Calendar
-            </button>
-          </div>
+        {/* Sync Calendar */}
+        <div style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, padding: 14, textAlign: "center" }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>📅</div>
+          <h4 style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 6 }}>Sync Calendar</h4>
+          <p style={{ fontSize: 12, color: T.sub, marginBottom: 12 }}>Connect your Google Calendar</p>
+          <button style={{ padding: "8px 20px", borderRadius: 8, background: T.bg, color: T.text, border: `1px solid ${T.border}`, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>🔗 Connect Google Calendar</button>
         </div>
       </div>
-    </AppShell>
+    </MobileShell>
   );
 }

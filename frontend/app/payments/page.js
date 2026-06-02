@@ -1,27 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import AppShell from "@/components/AppShell";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import MobileShell, { T } from "@/components/MobileShell";
 
 export default function PaymentsPage() {
+  return (
+    <Suspense fallback={<div style={{ background: T.bg, height: "100vh" }}/>}>
+      <PaymentsContent/>
+    </Suspense>
+  );
+}
+
+function PaymentsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
   const [payments, setPayments] = useState([]);
   const [summary, setSummary] = useState({ totalCollected: 0, pendingAmount: 0, overdueAmount: 0 });
   const [showForm, setShowForm] = useState(false);
-  const [teams, setTeams] = useState([]);
   const [members, setMembers] = useState([]);
-  const [form, setForm] = useState({ userId: "", amount: "", type: "MEMBERSHIP", method: "UPI", description: "", dueDate: "", status: "PENDING" });
+  const [form, setForm] = useState({
+    userId: "", amount: "", type: "MEMBERSHIP", method: "UPI",
+    description: "", dueDate: "", status: "PENDING",
+  });
   const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState("ALL");
 
   useEffect(() => {
     const data = localStorage.getItem("mukijo_user");
     if (!data) { router.replace("/"); return; }
     const u = JSON.parse(data);
     setUser(u);
+    if (searchParams.get("create") === "true") setShowForm(true);
+    const evType = searchParams.get("type");
+    const evRef  = searchParams.get("eventRef");
+    if (evType) setForm(f => ({ ...f, type: evType, description: evRef ? `Fees for: ${evRef}` : "" }));
     loadData(u.id);
-  }, [router]);
+  }, [router, searchParams]);
 
   async function loadData(userId) {
     try {
@@ -33,38 +49,16 @@ export default function PaymentsPage() {
       const tData = await tRes.json();
       setPayments(pData.payments || []);
       setSummary(pData.summary || { totalCollected: 0, pendingAmount: 0, overdueAmount: 0 });
-      setTeams(tData.teams || []);
-      // Collect all unique members
       const allMembers = [];
-      (tData.teams || []).forEach(t => {
+      (tData.teams || []).forEach(t =>
         (t.members || []).forEach(m => {
           if (!allMembers.find(x => x.id === m.user.id)) allMembers.push(m.user);
-        });
-      });
+        })
+      );
       setMembers(allMembers);
     } catch (e) { console.error(e); }
     setLoading(false);
-  };
-
-  const update = (f) => (e) => setForm(prev => ({ ...prev, [f]: e.target.value }));
-  const handleRemind = async (payment) => {
-    if (!payment.user?.phone) return alert("User has no phone number on record.");
-    try {
-      const res = await fetch("/api/send-reminder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          phone: payment.user.phone, 
-          message: `Reminder from Mukijo: You have a pending due of Rs.${payment.amount} for ${payment.type}. Please settle it soon.`
-        })
-      });
-      if (res.ok) alert("Reminder SMS sent!");
-      else alert("Failed to send reminder.");
-    } catch (e) {
-      console.error(e);
-      alert("Error sending reminder.");
-    }
-  };
+  }
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -94,146 +88,218 @@ export default function PaymentsPage() {
     } catch { alert("Error"); }
   };
 
+  const handleRemind = async (p) => {
+    if (!p.user?.phone) return alert("User has no phone number on record.");
+    try {
+      await fetch("/api/send-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: p.user.phone,
+          message: `Reminder from Mukijo: ₹${p.amount} pending for ${p.type}. Please settle soon.`,
+        }),
+      });
+      alert("Reminder sent!");
+    } catch { alert("Error sending reminder."); }
+  };
+
   if (!user) return null;
-  const fmt = (n) => "₹" + Number(n).toLocaleString("en-IN");
-  const initials = (n) => n.split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase();
-  const avatarColors = ["#6366f1", "#ec4899", "#f59e0b", "#10b981", "#3b82f6"];
-  const statusColors = { PAID: { bg: "#f0fdf4", color: "#16a34a" }, PENDING: { bg: "#fefce8", color: "#d97706" }, OVERDUE: { bg: "#fef2f2", color: "#dc2626" }, REFUNDED: { bg: "#f1f5f9", color: "#64748b" } };
-  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "13px", color: "#0f172a", background: "#fff", outline: "none", boxSizing: "border-box" };
+
+  const fmt = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+  const initials = n => (n || "?").split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase();
+  const avatarColors = ["#0057B8","#00AA55","#D97706","#7C3AED","#DC2626","#0891B2"];
+  const statusStyle = {
+    PAID:     { bg: "#E8F9F2", color: "#00AA55", label: "Paid"     },
+    PENDING:  { bg: "#FFFBEB", color: "#D97706", label: "Pending"  },
+    OVERDUE:  { bg: "#FEF2F2", color: "#DC2626", label: "Overdue"  },
+    REFUNDED: { bg: "#F1F5F9", color: "#6B7280", label: "Refunded" },
+  };
+  const inputStyle = {
+    width: "100%", padding: "11px 13px", borderRadius: 10,
+    border: `1.5px solid ${T.border}`, fontSize: 14, color: T.text,
+    background: "#fff", outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+  };
+
+  const filtered = filterStatus === "ALL" ? payments : payments.filter(p => p.status === filterStatus);
 
   return (
-    <AppShell searchPlaceholder="Search payments...">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a" }}>Payments</h1>
-        <button onClick={() => setShowForm(!showForm)} style={{ padding: "10px 20px", borderRadius: "10px", background: "#2563eb", color: "#fff", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
-          {showForm ? "Cancel" : "+ Record Payment"}
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
+    <MobileShell title="Payments" rightAction={
+      <button onClick={() => setShowForm(v => !v)} style={{
+        background: showForm ? "#FEF2F2" : T.primary, color: showForm ? T.red : "#fff",
+        border: "none", borderRadius: 10, padding: "6px 14px",
+        fontSize: 12, fontWeight: 700, cursor: "pointer",
+      }}>
+        {showForm ? "✕ Cancel" : "+ Payment"}
+      </button>
+    }>
+      {/* Summary cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
         {[
-          { label: "Total Collected", value: fmt(summary.totalCollected), icon: "💰", changeColor: "#16a34a" },
-          { label: "Pending", value: fmt(summary.pendingAmount), icon: "⏳", changeColor: "#d97706" },
-          { label: "Overdue", value: fmt(summary.overdueAmount), icon: "⚠️", changeColor: "#dc2626" },
-          { label: "Transactions", value: payments.length, icon: "📊", changeColor: "#2563eb" },
-        ].map(stat => (
-          <div key={stat.label} style={{ background: "#fff", borderRadius: "14px", padding: "20px", border: "1px solid #e2e8f0" }}>
-            <div style={{ fontSize: "22px", marginBottom: "8px" }}>{stat.icon}</div>
-            <div style={{ fontSize: "22px", fontWeight: 800, color: "#0f172a" }}>{stat.value}</div>
-            <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>{stat.label}</div>
+          { label: "Collected",   val: fmt(summary.totalCollected), color: "#00AA55", bg: "#E8F9F2", icon: "💰" },
+          { label: "Pending",     val: fmt(summary.pendingAmount),  color: "#D97706", bg: "#FFFBEB", icon: "⏳" },
+          { label: "Overdue",     val: fmt(summary.overdueAmount),  color: "#DC2626", bg: "#FEF2F2", icon: "⚠️" },
+        ].map(s => (
+          <div key={s.label} style={{
+            background: s.bg, borderRadius: 12, padding: "12px 10px",
+            border: `1px solid ${s.color}20`,
+          }}>
+            <div style={{ fontSize: 18 }}>{s.icon}</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: s.color, marginTop: 4 }}>{s.val}</div>
+            <div style={{ fontSize: 11, color: T.sub, marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Create Form */}
+      {/* Quick action: Settlement */}
+      <div onClick={() => router.push("/settlement")} style={{
+        background: T.card, borderRadius: 12, padding: "12px 14px",
+        boxShadow: T.shadow, marginBottom: 16, cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 12,
+        border: `1px solid ${T.border}`,
+      }}>
+        <span style={{ fontSize: 20 }}>🏦</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Fee Settlement</div>
+          <div style={{ fontSize: 12, color: T.sub }}>Track and settle outstanding fees</div>
+        </div>
+        <span style={{ color: T.sub, fontSize: 16 }}>›</span>
+      </div>
+
+      {/* Create Payment Form */}
       {showForm && (
-        <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "24px", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "16px" }}>Record Payment</h2>
-          <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
+        <div style={{ background: T.card, borderRadius: 16, padding: "18px 16px", boxShadow: T.shadow, marginBottom: 16 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: T.text, marginBottom: 14 }}>Record Payment</h2>
+          <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <select value={form.userId} onChange={e => setForm(f => ({ ...f, userId: e.target.value }))} style={inputStyle} required>
+              <option value="">Select member *</option>
+              {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Amount (₹) *</label>
+                <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
+                  placeholder="0" style={inputStyle} required/>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Type</label>
+                <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={inputStyle}>
+                  {["MEMBERSHIP","EVENT","VENUE","OTHER"].map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Method</label>
+                <select value={form.method} onChange={e => setForm(f => ({ ...f, method: e.target.value }))} style={inputStyle}>
+                  {["UPI","CASH","CARD","BANK_TRANSFER"].map(m => <option key={m} value={m}>{m.replace("_", " ")}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Status</label>
+                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={inputStyle}>
+                  {["PENDING","PAID","OVERDUE"].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="Description (e.g. Monthly fee – October)" style={inputStyle}/>
+
             <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Member *</label>
-              <select value={form.userId} onChange={update("userId")} style={inputStyle} required>
-                <option value="">Select member</option>
-                {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
+              <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Due Date</label>
+              <input type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} style={inputStyle}/>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Amount (₹) *</label>
-              <input type="number" value={form.amount} onChange={update("amount")} placeholder="5000" style={inputStyle} required />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Type</label>
-              <select value={form.type} onChange={update("type")} style={inputStyle}>
-                <option value="MEMBERSHIP">Membership</option>
-                <option value="EVENT">Event</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Method</label>
-              <select value={form.method} onChange={update("method")} style={inputStyle}>
-                <option value="UPI">UPI</option>
-                <option value="CARD">Card</option>
-                <option value="CASH">Cash</option>
-                <option value="BANK_TRANSFER">Bank Transfer</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Status</label>
-              <select value={form.status} onChange={update("status")} style={inputStyle}>
-                <option value="PENDING">Pending</option>
-                <option value="PAID">Paid</option>
-                <option value="OVERDUE">Overdue</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Due Date</label>
-              <input type="date" value={form.dueDate} onChange={update("dueDate")} style={inputStyle} />
-            </div>
-            <div style={{ gridColumn: "span 3" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Description</label>
-              <input value={form.description} onChange={update("description")} placeholder="e.g. Monthly fee October 2024" style={inputStyle} />
-            </div>
-            <div><button type="submit" style={{ padding: "11px 28px", borderRadius: "10px", background: "#2563eb", color: "#fff", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>Save Payment</button></div>
+
+            <button type="submit" style={{
+              padding: "12px", borderRadius: 12, background: T.primary,
+              color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer",
+            }}>Save Payment</button>
           </form>
         </div>
       )}
 
-      {/* Payments Table */}
-      <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-        <div style={{ padding: "18px 24px", borderBottom: "1px solid #f1f5f9" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Transaction History</h2>
-        </div>
-        {loading ? <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>Loading...</div> :
-          payments.length === 0 ? <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>No payments recorded yet</div> : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                  {["MEMBER", "AMOUNT", "TYPE", "METHOD", "STATUS", "DATE", ""].map(h => (
-                    <th key={h} style={{ padding: "10px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: "#94a3b8" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((p, i) => {
-                  const sc = statusColors[p.status] || statusColors.PENDING;
-                  return (
-                    <tr key={p.id} style={{ borderBottom: "1px solid #f1f5f9" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <td style={{ padding: "12px 20px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: avatarColors[i % avatarColors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: "#fff" }}>{initials(p.user.name)}</div>
-                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{p.user.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 20px", fontSize: "14px", fontWeight: 700, color: p.status === "PAID" ? "#16a34a" : "#0f172a" }}>{p.status === "PAID" ? "+" : ""}{fmt(p.amount)}</td>
-                      <td style={{ padding: "12px 20px", fontSize: "12px", color: "#64748b" }}>{p.type}</td>
-                      <td style={{ padding: "12px 20px", fontSize: "12px", color: "#64748b" }}>{p.method || "—"}</td>
-                      <td style={{ padding: "12px 20px" }}>
-                        <select value={p.status} onChange={e => updateStatus(p.id, e.target.value)} style={{ background: sc.bg, color: sc.color, fontSize: "11px", fontWeight: 700, padding: "3px 8px", borderRadius: "6px", border: "none", cursor: "pointer" }}>
-                          <option value="PAID">Paid</option>
-                          <option value="PENDING">Pending</option>
-                          <option value="OVERDUE">Overdue</option>
-                          <option value="REFUNDED">Refunded</option>
-                        </select>
-                      </td>
-                      <td style={{ padding: "12px 20px", fontSize: "12px", color: "#64748b" }}>{new Date(p.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}</td>
-                      <td style={{ padding: "12px 20px" }}>
-                        {(p.status === "PENDING" || p.status === "OVERDUE") && (
-                          <button onClick={() => handleRemind(p)} style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} title="Send SMS Reminder">
-                            🔔 Remind
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+      {/* Filter pills */}
+      <div style={{
+        display: "flex", gap: 6, marginBottom: 14,
+        background: T.card, borderRadius: 12, padding: 4, boxShadow: T.shadow,
+      }}>
+        {["ALL","PAID","PENDING","OVERDUE"].map(f => (
+          <button key={f} onClick={() => setFilterStatus(f)} style={{
+            flex: 1, padding: "7px 4px", borderRadius: 9, border: "none",
+            fontSize: 11, fontWeight: 600, cursor: "pointer",
+            background: filterStatus === f ? T.primary : "transparent",
+            color: filterStatus === f ? "#fff" : T.sub,
+          }}>{f}</button>
+        ))}
       </div>
-    </AppShell>
+
+      {/* Payments list */}
+      {loading ? (
+        <div style={{ textAlign: "center", paddingTop: 60, color: T.sub }}>Loading payments...</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ background: T.card, borderRadius: 16, padding: "40px 20px", textAlign: "center", boxShadow: T.shadow }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>💳</div>
+          <p style={{ fontSize: 14, color: T.sub }}>No payments found</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {filtered.map((p, i) => {
+            const sc = statusStyle[p.status] || statusStyle.PENDING;
+            return (
+              <div key={p.id} style={{
+                background: T.card, borderRadius: 14, padding: "14px 14px",
+                boxShadow: T.shadow, display: "flex", alignItems: "center", gap: 12,
+              }}>
+                {/* Avatar */}
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12,
+                  background: avatarColors[i % avatarColors.length],
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0,
+                }}>{initials(p.user?.name)}</div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{p.user?.name}</div>
+                  <div style={{ fontSize: 12, color: T.sub, marginTop: 2 }}>
+                    {p.type}{p.description ? ` · ${p.description}` : ""}
+                  </div>
+                  <div style={{ fontSize: 11, color: T.sub, marginTop: 2 }}>
+                    {new Date(p.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    {p.method ? ` · ${p.method.replace("_", " ")}` : ""}
+                  </div>
+                </div>
+
+                {/* Amount & status */}
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{
+                    fontSize: 16, fontWeight: 800,
+                    color: p.status === "PAID" ? "#00AA55" : p.status === "OVERDUE" ? T.red : "#D97706",
+                  }}>₹{Number(p.amount).toLocaleString("en-IN")}</div>
+                  <select value={p.status} onChange={e => updateStatus(p.id, e.target.value)} style={{
+                    marginTop: 4, background: sc.bg, color: sc.color,
+                    fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6,
+                    border: "none", cursor: "pointer",
+                  }}>
+                    {["PAID","PENDING","OVERDUE","REFUNDED"].map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  {(p.status === "PENDING" || p.status === "OVERDUE") && (
+                    <button onClick={() => handleRemind(p)} style={{
+                      display: "block", marginTop: 4, background: T.primaryL, color: T.primary,
+                      border: "none", borderRadius: 6, padding: "2px 8px",
+                      fontSize: 10, fontWeight: 600, cursor: "pointer",
+                    }}>🔔 Remind</button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </MobileShell>
   );
 }

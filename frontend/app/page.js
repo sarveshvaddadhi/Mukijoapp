@@ -43,7 +43,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email: loginMode === "email" ? email : undefined, phone: loginMode === "phone" ? phone : undefined, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.message || "Login failed."); setLoading(false); return; }
+      if (!res.ok) { setError(data.detail || data.message || "Login failed."); setLoading(false); return; }
       if (data?.user) { 
         localStorage.setItem("mukijo_user", JSON.stringify(data.user)); 
         const u = data.user;

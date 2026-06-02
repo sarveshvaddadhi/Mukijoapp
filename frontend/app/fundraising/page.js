@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AppShell from "@/components/AppShell";
+import MobileShell, { T } from "@/components/MobileShell";
 
 export default function FundraisingPage() {
   const router = useRouter();
@@ -79,92 +79,76 @@ export default function FundraisingPage() {
   const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "13px", color: "#0f172a", background: "#fff", outline: "none", boxSizing: "border-box" };
 
   return (
-    <AppShell searchPlaceholder="Search campaigns...">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-        <div>
-          <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a" }}>Fundraising</h1>
-          <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>{campaigns.length} campaigns</p>
-        </div>
-        <button onClick={() => setShowForm(!showForm)} style={{ padding: "10px 20px", borderRadius: "10px", background: "#2563eb", color: "#fff", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
-          {showForm ? "Cancel" : "🎯 New Campaign"}
-        </button>
-      </div>
-
+    <MobileShell title="Fundraising" rightAction={
+      <button onClick={() => setShowForm(!showForm)} style={{ background: showForm ? "#FEF2F2" : T.primary, color: showForm ? T.red : "#fff", border: "none", borderRadius: 10, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        {showForm ? "✕ Cancel" : "🎯 Campaign"}
+      </button>
+    }>
       {/* Create Form */}
       {showForm && (
-        <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "24px", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "16px" }}>Create Campaign</h2>
-          <form onSubmit={handleCreate} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <div style={{ gridColumn: "span 2" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Campaign Title *</label>
-              <input value={form.title} onChange={update("title")} placeholder="e.g. New Equipment Fund" style={inputStyle} required />
+        <div style={{ background: T.card, borderRadius: 16, boxShadow: T.shadow, padding: "18px 16px", marginBottom: 16 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: T.text, marginBottom: 14 }}>Create Campaign</h2>
+          <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <input value={form.title} onChange={update("title")} placeholder="Campaign title *" style={{ width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, color: T.text, background: "#fff", outline: "none", boxSizing: "border-box" }} required />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Goal Amount (₹) *</label>
+                <input type="number" value={form.goalAmount} onChange={update("goalAmount")} placeholder="50000" style={{ width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, color: T.text, background: "#fff", outline: "none", boxSizing: "border-box" }} required />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.sub, display: "block", marginBottom: 4 }}>Team *</label>
+                <select value={form.teamId} onChange={update("teamId")} style={{ width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, color: T.text, background: "#fff", outline: "none", boxSizing: "border-box" }} required>
+                  <option value="">Select team</option>
+                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Goal Amount (₹) *</label>
-              <input type="number" value={form.goalAmount} onChange={update("goalAmount")} placeholder="50000" style={inputStyle} required />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Team *</label>
-              <select value={form.teamId} onChange={update("teamId")} style={inputStyle} required>
-                <option value="">Select team</option>
-                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>End Date</label>
-              <input type="date" value={form.endDate} onChange={update("endDate")} style={inputStyle} />
-            </div>
-            <div style={{ gridColumn: "span 2" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#374151", marginBottom: "5px" }}>Description</label>
-              <textarea value={form.description} onChange={update("description")} rows={2} placeholder="Campaign details..." style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }} />
-            </div>
-            <div><button type="submit" style={{ padding: "11px 28px", borderRadius: "10px", background: "#2563eb", color: "#fff", border: "none", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>Launch Campaign</button></div>
+            <input type="date" value={form.endDate} onChange={update("endDate")} style={{ width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, color: T.text, background: "#fff", outline: "none", boxSizing: "border-box" }} />
+            <textarea value={form.description} onChange={update("description")} rows={2} placeholder="Campaign details..." style={{ width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, color: T.text, background: "#fff", outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }} />
+            <button type="submit" style={{ padding: "12px", borderRadius: 12, background: T.primary, color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Launch Campaign</button>
           </form>
         </div>
       )}
 
       {/* Campaign Cards */}
-      {loading ? <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>Loading...</div> :
+      {loading ? <div style={{ textAlign: "center", padding: "60px", color: T.sub }}>Loading...</div> :
         campaigns.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-            <div style={{ fontSize: "48px", marginBottom: "12px" }}>🎯</div>
-            <p style={{ fontSize: "15px", fontWeight: 600 }}>No campaigns yet</p>
+          <div style={{ background: T.card, borderRadius: 16, padding: "60px 20px", textAlign: "center", boxShadow: T.shadow }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🎯</div>
+            <p style={{ fontSize: 15, fontWeight: 600, color: T.sub }}>No campaigns yet</p>
+            <button onClick={() => setShowForm(true)} style={{ marginTop: 12, padding: "9px 20px", borderRadius: 10, background: T.primary, color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>+ Start Campaign</button>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {campaigns.map(c => {
               const pct = c.goalAmount > 0 ? Math.min(100, Math.round((c.raised / c.goalAmount) * 100)) : 0;
               return (
-                <div key={c.id} style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-                  {/* Header */}
-                  <div style={{ height: "8px", background: `linear-gradient(90deg, ${pct >= 100 ? "#16a34a" : "#2563eb"} ${pct}%, #e2e8f0 ${pct}%)` }} />
-                  <div style={{ padding: "20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                <div key={c.id} style={{ background: T.card, borderRadius: 16, boxShadow: T.shadow, overflow: "hidden" }}>
+                  <div style={{ height: 6, background: `linear-gradient(90deg, ${pct >= 100 ? "#00AA55" : T.primary} ${pct}%, ${T.border} ${pct}%)` }} />
+                  <div style={{ padding: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                       <div>
-                        <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>{c.title}</h3>
-                        <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "3px" }}>{c.team?.name} · by {c.createdBy?.name}</p>
+                        <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{c.title}</h3>
+                        <p style={{ fontSize: 11, color: T.sub, marginTop: 2 }}>{c.team?.name}</p>
                       </div>
-                      <span style={{
-                        fontSize: "10px", fontWeight: 700, padding: "3px 10px", borderRadius: "99px",
-                        background: c.status === "COMPLETED" ? "#dcfce7" : c.status === "PAUSED" ? "#fefce8" : "#eff6ff",
-                        color: c.status === "COMPLETED" ? "#16a34a" : c.status === "PAUSED" ? "#d97706" : "#2563eb",
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99,
+                        background: c.status === "COMPLETED" ? "#E8F9F2" : c.status === "PAUSED" ? "#FFFBEB" : T.primaryL,
+                        color: c.status === "COMPLETED" ? "#00AA55" : c.status === "PAUSED" ? "#D97706" : T.primary,
                       }}>{c.status}</span>
                     </div>
+                    {c.description && <p style={{ fontSize: 12, color: T.sub, marginBottom: 10 }}>{c.description}</p>}
 
-                    {c.description && <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "12px" }}>{c.description}</p>}
-
-                    {/* Progress */}
-                    <div style={{ marginBottom: "14px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                        <span style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a" }}>{fmt(c.raised)}</span>
-                        <span style={{ fontSize: "13px", color: "#64748b" }}>of {fmt(c.goalAmount)}</span>
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: T.text }}>{fmt(c.raised)}</span>
+                        <span style={{ fontSize: 12, color: T.sub }}>of {fmt(c.goalAmount)}</span>
                       </div>
-                      <div style={{ height: "8px", borderRadius: "4px", background: "#f1f5f9", overflow: "hidden" }}>
-                        <div style={{ width: `${pct}%`, height: "100%", borderRadius: "4px", background: pct >= 100 ? "#16a34a" : "linear-gradient(90deg, #2563eb, #4f46e5)", transition: "width 0.5s" }} />
+                      <div style={{ height: 7, borderRadius: 4, background: T.border, overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 4, background: pct >= 100 ? "#00AA55" : T.primary, transition: "width 0.5s" }} />
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: 700, color: pct >= 100 ? "#16a34a" : "#2563eb" }}>{pct}% funded</span>
-                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>{c._count?.donations || 0} donors</span>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: pct >= 100 ? "#00AA55" : T.primary }}>{pct}% funded</span>
+                        <span style={{ fontSize: 11, color: T.sub }}>{c._count?.donations || 0} donors</span>
                       </div>
                     </div>
 
@@ -176,24 +160,15 @@ export default function FundraisingPage() {
                       </div>
                     ))}
 
-                    {/* Actions */}
-                    <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
-                      <button onClick={() => setShowDonate(showDonate === c.id ? null : c.id)} style={{
-                        flex: 1, padding: "10px", borderRadius: "10px", background: "#2563eb", color: "#fff",
-                        border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                      }}>💝 Donate</button>
-                      <button onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/fundraising?id=" + c.id); alert("Link copied!"); }} style={{
-                        padding: "10px 16px", borderRadius: "10px", background: "#f1f5f9", color: "#374151",
-                        border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                      }}>🔗 Share</button>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <button onClick={() => setShowDonate(showDonate === c.id ? null : c.id)} style={{ flex: 1, padding: "10px", borderRadius: 10, background: T.primary, color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>💝 Donate</button>
+                      <button onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/fundraising?id=" + c.id); alert("Link copied!"); }} style={{ padding: "10px 14px", borderRadius: 10, background: T.bg, color: T.text, border: `1.5px solid ${T.border}`, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>🔗</button>
                     </div>
-
-                    {/* Donate Form */}
                     {showDonate === c.id && (
-                      <div style={{ marginTop: "12px", padding: "12px", background: "#f8fafc", borderRadius: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <input type="number" value={donateAmount} onChange={e => setDonateAmount(e.target.value)} placeholder="Amount (₹)" style={inputStyle} />
-                        <input value={donateMsg} onChange={e => setDonateMsg(e.target.value)} placeholder="Message (optional)" style={inputStyle} />
-                        <button onClick={() => handleDonate(c.id)} style={{ padding: "10px", borderRadius: "8px", background: "#16a34a", color: "#fff", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>Confirm Donation</button>
+                      <div style={{ marginTop: 10, padding: 12, background: T.bg, borderRadius: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                        <input type="number" value={donateAmount} onChange={e => setDonateAmount(e.target.value)} placeholder="Amount (₹)" style={{ width: "100%", padding: "10px 13px", borderRadius: 9, border: `1.5px solid ${T.border}`, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                        <input value={donateMsg} onChange={e => setDonateMsg(e.target.value)} placeholder="Message (optional)" style={{ width: "100%", padding: "10px 13px", borderRadius: 9, border: `1.5px solid ${T.border}`, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                        <button onClick={() => handleDonate(c.id)} style={{ padding: 10, borderRadius: 9, background: "#00AA55", color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Confirm Donation</button>
                       </div>
                     )}
                   </div>
@@ -202,6 +177,6 @@ export default function FundraisingPage() {
             })}
           </div>
         )}
-    </AppShell>
+    </MobileShell>
   );
 }

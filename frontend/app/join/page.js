@@ -15,35 +15,6 @@ function JoinTeamContent() {
   const [joining, setJoining] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Safely parse search params
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("teamId");
-      if (id) {
-        setTeamId(id);
-        fetchTeam(id);
-      } else {
-        fetchDefaultTeam();
-      }
-
-      // Check user session
-      const stored = localStorage.getItem("mukijo_user");
-      if (stored) {
-        try {
-          const u = JSON.parse(stored);
-          setUser(u);
-          // Default join role to user's role if it's PLAYER or PARENT
-          if (u.role === "PLAYER" || u.role === "PARENT" || u.role === "COACH") {
-            setJoinRole(u.role);
-          }
-        } catch (e) {
-          console.error("Session parse error", e);
-        }
-      }
-    }
-  }, []);
-
   const fetchDefaultTeam = async () => {
     try {
       const res = await fetch("/api/teams/default");
@@ -82,6 +53,35 @@ function JoinTeamContent() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Safely parse search params
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("teamId");
+      if (id) {
+        setTeamId(id);
+        fetchTeam(id);
+      } else {
+        fetchDefaultTeam();
+      }
+
+      // Check user session
+      const stored = localStorage.getItem("mukijo_user");
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          setUser(u);
+          // Default join role to user's role if it's PLAYER or PARENT
+          if (u.role === "PLAYER" || u.role === "PARENT" || u.role === "COACH") {
+            setJoinRole(u.role);
+          }
+        } catch (e) {
+          console.error("Session parse error", e);
+        }
+      }
+    }
+  }, []);
 
   const handleJoinTeam = async () => {
     if (!user || !teamId) return;

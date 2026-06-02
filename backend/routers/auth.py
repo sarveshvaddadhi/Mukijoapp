@@ -30,10 +30,9 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
         if not payload.name or not payload.email or not payload.password:
             raise HTTPException(status_code=400, detail="Name, email, and password are required")
 
-        if not payload.aadhaarNo:
-            raise HTTPException(status_code=400, detail="Aadhaar verification is required to create an account.")
-
-        cleaned_aadhaar = re.sub(r"\s+", "", payload.aadhaarNo)
+        cleaned_aadhaar = None
+        if payload.aadhaarNo:
+            cleaned_aadhaar = re.sub(r"\s+", "", payload.aadhaarNo)
 
 
         existing = db.query(models.User).filter(models.User.email == payload.email).first()
@@ -41,21 +40,20 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
             if existing.aadhaarVerified:
                 raise HTTPException(status_code=400, detail="An account with this email already exists.")
 
-
-            existing_aadhaar = db.query(models.User).filter(
-                models.User.aadhaarNo == cleaned_aadhaar,
-                models.User.email != payload.email
-            ).first()
-            if existing_aadhaar:
-                raise HTTPException(status_code=400, detail="An account with this Aadhaar number already exists.")
-
+            if cleaned_aadhaar:
+                existing_aadhaar = db.query(models.User).filter(
+                    models.User.aadhaarNo == cleaned_aadhaar,
+                    models.User.email != payload.email
+                ).first()
+                if existing_aadhaar:
+                    raise HTTPException(status_code=400, detail="An account with this Aadhaar number already exists.")
+                existing.aadhaarNo = cleaned_aadhaar
+                existing.aadhaarVerified = True
 
             existing.name = payload.name
             existing.phone = re.sub(r"\s+", "", payload.phone) if payload.phone else None
             existing.password = hash_password(payload.password)
             existing.role = payload.role if payload.role else (existing.role or "PLAYER")
-            existing.aadhaarNo = cleaned_aadhaar
-            existing.aadhaarVerified = True
 
             db.commit()
             db.refresh(existing)
@@ -63,11 +61,10 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
             user_dict.pop("password", None)
             return {"user": user_dict}
 
-
-        existing_aadhaar = db.query(models.User).filter(models.User.aadhaarNo == cleaned_aadhaar).first()
-        if existing_aadhaar:
-            raise HTTPException(status_code=400, detail="An account with this Aadhaar number already exists.")
-
+        if cleaned_aadhaar:
+            existing_aadhaar = db.query(models.User).filter(models.User.aadhaarNo == cleaned_aadhaar).first()
+            if existing_aadhaar:
+                raise HTTPException(status_code=400, detail="An account with this Aadhaar number already exists.")
 
         new_user = models.User(
             name=payload.name,
@@ -76,7 +73,7 @@ def register(payload: schemas.UserRegister, db: Session = Depends(get_db)):
             password=hash_password(payload.password),
             role=payload.role or "PLAYER",
             aadhaarNo=cleaned_aadhaar,
-            aadhaarVerified=True
+            aadhaarVerified=bool(cleaned_aadhaar)
         )
         db.add(new_user)
         db.commit()
@@ -139,6 +136,18 @@ def forgot_password(payload: schemas.ForgotPassword, db: Session = Depends(get_d
     except Exception as e:
         print("Forgot password error:", e)
         raise HTTPException(status_code=500, detail="Server error")
+
+class GoogleAuth(schemas.BaseModel):
+    id_token: str
+
+@router.post("/auth/google")
+def google_auth(payload: GoogleAuth, db: Session = Depends(get_db)):
+    # This is a stub for Google OAuth validation
+    # Real implementation would use google-auth to verify the id_token
+    # and fetch user details (email, name, picture).
+    # Then upsert the user based on email.
+    print(f"Received Google id_token: {payload.id_token}")
+    return {"message": "Google OAuth successful", "token": "stub_token", "user": {"id": 1, "name": "Google User", "email": "google@example.com", "role": "PLAYER"}}
 
 
 @router.post("/auth/send-aadhaar-otp")

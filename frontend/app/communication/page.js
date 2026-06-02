@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import AppShell from "@/components/AppShell";
+import MobileShell, { T } from "@/components/MobileShell";
 
 export default function CommunicationPage() {
   const router = useRouter();
@@ -114,84 +114,78 @@ export default function CommunicationPage() {
   const priorityColors = { URGENT: { bg: "#fef2f2", color: "#dc2626", border: "#fecaca" }, NORMAL: { bg: "#fff", color: "#374151", border: "#e2e8f0" }, INFO: { bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" } };
 
   return (
-    <AppShell searchPlaceholder="Search conversations...">
-      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "16px", alignItems: "start" }}>
-        {/* LEFT: Channels */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: "0", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden" }}>
-            {["chat", "announcements"].map(t => (
-              <button key={t} onClick={() => setActiveTab(t)} style={{
-                flex: 1, padding: "9px", border: "none", fontSize: "11px", fontWeight: 600, cursor: "pointer", textTransform: "capitalize",
-                background: activeTab === t ? "#2563eb" : "#fff", color: activeTab === t ? "#fff" : "#64748b",
-              }}>{t}</button>
-            ))}
-          </div>
-
-          {activeTab === "chat" && (
-            <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0" }}>
-              <div style={{ padding: "14px 14px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px" }}>CHANNELS</span>
-                <button onClick={() => setShowNewChannel(!showNewChannel)} style={{ background: "none", border: "1px solid #e2e8f0", borderRadius: "6px", width: "22px", height: "22px", cursor: "pointer", color: "#64748b", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
-              </div>
-              {showNewChannel && (
-                <div style={{ padding: "0 10px 10px", display: "flex", gap: "6px" }}>
-                  <input value={newChannelName} onChange={e => setNewChannelName(e.target.value)} placeholder="Channel name" style={{ ...inputStyle, fontSize: "12px", padding: "6px 8px" }} onKeyDown={e => e.key === "Enter" && createChannel()} />
-                </div>
-              )}
-              <div style={{ padding: "0 8px 10px" }}>
-                {channels.length === 0 ? (
-                  <div style={{ padding: "16px 8px", color: "#94a3b8", fontSize: "12px", textAlign: "center" }}>No channels yet. Create one!</div>
-                ) : channels.map(ch => (
-                  <button key={ch.id} onClick={() => { setActiveChannel(ch); loadMessages(ch.id); }} style={{
-                    width: "100%", textAlign: "left", padding: "8px 10px", borderRadius: "8px", border: "none",
-                    background: activeChannel?.id === ch.id ? "#eff6ff" : "transparent",
-                    color: activeChannel?.id === ch.id ? "#2563eb" : "#374151",
-                    fontSize: "13px", fontWeight: activeChannel?.id === ch.id ? 600 : 400, cursor: "pointer",
-                    display: "flex", alignItems: "center", gap: "8px",
-                  }}>
-                    <span style={{ fontSize: "12px", opacity: 0.7 }}>#</span>
-                    {ch.name}
-                    <span style={{ marginLeft: "auto", fontSize: "10px", color: "#94a3b8" }}>{ch._count?.messages || 0}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+    <MobileShell title="Communication">
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 0, background: T.card, borderRadius: 12, padding: 4, boxShadow: T.shadow }}>
+          {["chat", "announcements"].map(t => (
+            <button key={t} onClick={() => setActiveTab(t)} style={{
+              flex: 1, padding: "9px", borderRadius: 9, border: "none",
+              fontSize: 12, fontWeight: 600, cursor: "pointer", textTransform: "capitalize",
+              background: activeTab === t ? T.primary : "transparent",
+              color: activeTab === t ? "#fff" : T.sub,
+              transition: "all 0.15s",
+            }}>{t === "chat" ? "💬 Chat" : "📢 Announcements"}</button>
+          ))}
         </div>
+
+        {activeTab === "chat" && (
+          <div style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow }}>
+            <div style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.sub, letterSpacing: 0.5 }}>CHANNELS</span>
+              <button onClick={() => setShowNewChannel(!showNewChannel)} style={{ background: T.primaryL, border: "none", borderRadius: 6, width: 24, height: 24, cursor: "pointer", color: T.primary, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+            </div>
+            {showNewChannel && (
+              <div style={{ padding: "0 10px 10px", display: "flex", gap: 6, borderBottom: `1px solid ${T.border}` }}>
+                <input value={newChannelName} onChange={e => setNewChannelName(e.target.value)} placeholder="Channel name" style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${T.border}`, fontSize: 12, outline: "none" }} onKeyDown={e => e.key === "Enter" && createChannel()} />
+              </div>
+            )}
+            <div style={{ padding: "8px 10px", display: "flex", gap: 6, overflowX: "auto" }}>
+              {channels.length === 0 ? (
+                <div style={{ padding: "12px 8px", color: T.sub, fontSize: 12 }}>No channels yet. Create one!</div>
+              ) : channels.map(ch => (
+                <button key={ch.id} onClick={() => { setActiveChannel(ch); loadMessages(ch.id); }} style={{
+                  flexShrink: 0, padding: "6px 12px", borderRadius: 99,
+                  border: `1.5px solid ${activeChannel?.id === ch.id ? T.primary : T.border}`,
+                  background: activeChannel?.id === ch.id ? T.primaryL : "#fff",
+                  color: activeChannel?.id === ch.id ? T.primary : T.sub,
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}>#{ch.name}</button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* RIGHT: Content */}
         {activeTab === "chat" ? (
-          <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", height: "600px" }}>
-            {/* Header */}
-            <div style={{ padding: "14px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "14px" }}>#</span>
-              <span style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>{activeChannel?.name || "Select a channel"}</span>
+          <div style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, display: "flex", flexDirection: "column", height: 480 }}>
+            <div style={{ padding: "12px 14px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, color: T.sub }}>#</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{activeChannel?.name || "Select a channel"}</span>
             </div>
 
-            {/* Messages */}
-            <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+            <div ref={chatRef} style={{ flex: 1, overflowY: "auto", padding: "12px 14px" }}>
               {messages.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8" }}>
-                  <div style={{ fontSize: "40px", marginBottom: "8px" }}>💬</div>
-                  <p style={{ fontSize: "14px" }}>No messages yet. Start the conversation!</p>
+                <div style={{ textAlign: "center", padding: "40px 20px", color: T.sub }}>
+                  <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
+                  <p style={{ fontSize: 14 }}>No messages yet. Start the conversation!</p>
                 </div>
               ) : messages.map((m, i) => {
                 const isMe = m.userId === user.id;
                 const showAvatar = i === 0 || messages[i - 1].userId !== m.userId;
                 return (
-                  <div key={m.id} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: showAvatar ? "14px" : "4px" }}>
+                  <div key={m.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: showAvatar ? 12 : 3 }}>
                     {showAvatar ? (
-                      <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: colors[m.userId % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>{initials(m.user?.name)}</div>
-                    ) : <div style={{ width: "32px", flexShrink: 0 }} />}
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: colors[m.userId % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{initials(m.user?.name)}</div>
+                    ) : <div style={{ width: 28, flexShrink: 0 }} />}
                     <div style={{ flex: 1 }}>
                       {showAvatar && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                          <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{m.user?.name}</span>
-                          <span style={{ fontSize: "11px", color: "#94a3b8" }}>{new Date(m.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{m.user?.name}</span>
+                          <span style={{ fontSize: 10, color: T.sub }}>{new Date(m.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
                       )}
-                      <div style={{ fontSize: "13px", color: "#374151", lineHeight: 1.5, background: isMe ? "#eff6ff" : "#f8fafc", padding: "8px 12px", borderRadius: "0 10px 10px 10px", display: "inline-block" }}>
+                      <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5, background: isMe ? T.primaryL : T.bg, padding: "8px 12px", borderRadius: "0 10px 10px 10px", display: "inline-block" }}>
                         {m.content}
                       </div>
                     </div>
@@ -200,20 +194,18 @@ export default function CommunicationPage() {
               })}
             </div>
 
-            {/* Input */}
-            <div style={{ padding: "14px 20px", borderTop: "1px solid #f1f5f9" }}>
-              <div style={{ display: "flex", gap: "10px" }}>
+            <div style={{ padding: "12px 14px", borderTop: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", gap: 8 }}>
                 <input
-                  value={msgText}
-                  onChange={e => setMsgText(e.target.value)}
+                  value={msgText} onChange={e => setMsgText(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && sendMessage()}
                   placeholder={activeChannel ? `Message #${activeChannel.name}...` : "Select a channel"}
                   disabled={!activeChannel}
-                  style={{ ...inputStyle, flex: 1 }}
+                  style={{ flex: 1, padding: "10px 14px", borderRadius: 24, border: `1.5px solid ${T.border}`, outline: "none", fontSize: 14, background: T.bg }}
                 />
                 <button onClick={sendMessage} disabled={!activeChannel || !msgText.trim()} style={{
-                  padding: "10px 20px", borderRadius: "10px", background: "#2563eb", color: "#fff",
-                  border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                  padding: "10px 18px", borderRadius: 24, background: T.primary, color: "#fff",
+                  border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer",
                   opacity: !activeChannel || !msgText.trim() ? 0.5 : 1,
                 }}>Send</button>
               </div>
@@ -221,51 +213,52 @@ export default function CommunicationPage() {
           </div>
         ) : (
           /* Announcements Tab */
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Announcements</h2>
-              <button onClick={() => setShowAnnounce(!showAnnounce)} style={{ padding: "8px 16px", borderRadius: "10px", background: "#2563eb", color: "#fff", border: "none", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-                {showAnnounce ? "Cancel" : "📢 Post Announcement"}
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Announcements</h2>
+              <button onClick={() => setShowAnnounce(!showAnnounce)} style={{ padding: "7px 14px", borderRadius: 10, background: T.primary, color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                {showAnnounce ? "Cancel" : "📢 Post"}
               </button>
             </div>
 
             {showAnnounce && (
-              <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "20px" }}>
-                <form onSubmit={sendAnnouncement} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <input value={announcementForm.title} onChange={e => setAnnouncementForm(f => ({ ...f, title: e.target.value }))} placeholder="Announcement title" style={inputStyle} required />
-                  <textarea value={announcementForm.content} onChange={e => setAnnouncementForm(f => ({ ...f, content: e.target.value }))} placeholder="Write your announcement..." rows={3} style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }} required />
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    <select value={announcementForm.priority} onChange={e => setAnnouncementForm(f => ({ ...f, priority: e.target.value }))} style={{ ...inputStyle, width: "130px" }}>
+              <div style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, padding: 14 }}>
+                <form onSubmit={sendAnnouncement} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <input value={announcementForm.title} onChange={e => setAnnouncementForm(f => ({ ...f, title: e.target.value }))} placeholder="Announcement title" style={{ width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, outline: "none", boxSizing: "border-box" }} required />
+                  <textarea value={announcementForm.content} onChange={e => setAnnouncementForm(f => ({ ...f, content: e.target.value }))} placeholder="Write your announcement..." rows={3} style={{ width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }} required />
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <select value={announcementForm.priority} onChange={e => setAnnouncementForm(f => ({ ...f, priority: e.target.value }))} style={{ flex: 1, padding: "10px 12px", borderRadius: 9, border: `1.5px solid ${T.border}`, fontSize: 13, background: "#fff" }}>
                       <option value="NORMAL">Normal</option>
                       <option value="URGENT">Urgent</option>
                       <option value="INFO">Info</option>
                     </select>
-                    <button type="submit" style={{ padding: "10px 20px", borderRadius: "8px", background: "#2563eb", color: "#fff", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>Post</button>
+                    <button type="submit" style={{ padding: "10px 18px", borderRadius: 9, background: T.primary, color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Post</button>
                   </div>
                 </form>
               </div>
             )}
 
             {announcements.length === 0 ? (
-              <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", padding: "40px", textAlign: "center", color: "#94a3b8" }}>
-                <div style={{ fontSize: "40px", marginBottom: "8px" }}>📢</div>
+              <div style={{ background: T.card, borderRadius: 14, boxShadow: T.shadow, padding: "40px 20px", textAlign: "center", color: T.sub }}>
+                <div style={{ fontSize: 40, marginBottom: 8 }}>📢</div>
                 <p>No announcements yet</p>
               </div>
             ) : announcements.map(a => {
+              const priorityColors = { URGENT: { bg: "#FEF2F2", color: T.red, border: "#FECACA" }, NORMAL: { bg: T.card, color: T.text, border: T.border }, INFO: { bg: T.primaryL, color: T.primary, border: "#BFDBFE" } };
               const pc = priorityColors[a.priority] || priorityColors.NORMAL;
               return (
-                <div key={a.id} style={{ background: pc.bg, borderRadius: "14px", border: `1px solid ${pc.border}`, padding: "18px 20px", borderLeft: `4px solid ${pc.color}` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                <div key={a.id} style={{ background: pc.bg, borderRadius: 14, border: `1px solid ${pc.border}`, padding: "14px", borderLeft: `4px solid ${pc.color}`, boxShadow: T.shadow }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                     <div>
-                      {a.priority === "URGENT" && <span style={{ fontSize: "10px", fontWeight: 700, color: "#dc2626", marginRight: "8px" }}>⚠️ URGENT</span>}
-                      <span style={{ fontSize: "15px", fontWeight: 700, color: pc.color }}>{a.title}</span>
+                      {a.priority === "URGENT" && <span style={{ fontSize: 10, fontWeight: 700, color: T.red, marginRight: 6 }}>⚠️ URGENT</span>}
+                      <span style={{ fontSize: 14, fontWeight: 700, color: pc.color }}>{a.title}</span>
                     </div>
-                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>{new Date(a.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
+                    <span style={{ fontSize: 11, color: T.sub }}>{new Date(a.createdAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
                   </div>
-                  <p style={{ fontSize: "13px", color: "#374151", lineHeight: 1.6 }}>{a.content}</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
-                    <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: colors[a.userId % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 700, color: "#fff" }}>{initials(a.user?.name)}</div>
-                    <span style={{ fontSize: "12px", color: "#64748b" }}>{a.user?.name} · {a.team?.name}</span>
+                  <p style={{ fontSize: 13, color: T.text, lineHeight: 1.6 }}>{a.content}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, background: colors[a.userId % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#fff" }}>{initials(a.user?.name)}</div>
+                    <span style={{ fontSize: 12, color: T.sub }}>{a.user?.name} · {a.team?.name}</span>
                   </div>
                 </div>
               );
@@ -273,6 +266,6 @@ export default function CommunicationPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </MobileShell>
   );
 }

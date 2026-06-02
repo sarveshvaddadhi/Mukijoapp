@@ -40,6 +40,12 @@ class TeamCreate(BaseModel):
     division: Optional[str] = None
     description: Optional[str] = None
     userId: Optional[int] = None
+    sport_id: Optional[str] = None
+    team_type: Optional[str] = None
+    age_group: Optional[str] = None
+    visibility: Optional[str] = "PRIVATE"
+    venue_id: Optional[int] = None
+    members: Optional[List[dict]] = None
 
 class MemberAdd(BaseModel):
     email: str
@@ -138,3 +144,67 @@ class PollCreate(BaseModel):
 class PollVoteRequest(BaseModel):
     optionId: int
     userId: int
+
+class SportResponse(BaseModel):
+    id: str
+    name: str
+    slug: str
+    icon_url: Optional[str] = None
+    accent_color: Optional[str] = None
+    is_active: bool
+
+    class Config:
+        orm_mode = True
+
+class VenueResponse(BaseModel):
+    id: int
+    name: str
+    address: str
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    rating: Optional[float] = None
+    description: Optional[str] = None
+    contact_phone: Optional[str] = None
+    website_url: Optional[str] = None
+    is_available: bool
+    distance_km: Optional[float] = None
+
+    class Config:
+        orm_mode = True
+
+class VenueCreate(BaseModel):
+    name: str
+    address: str
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    description: Optional[str] = None
+    sports: Optional[List[str]] = None
+
+
+class VenueBookingCreate(BaseModel):
+    venue_id: int
+    team_id: int
+    start_time: datetime
+    end_time: datetime
+    purpose: Optional[str] = None
+
+
+class VenueBookingResponse(BaseModel):
+    id: int
+    venue_id: int
+    team_id: int
+    booker_id: int
+    start_time: datetime
+    end_time: datetime
+    purpose: Optional[str] = None
+    status: str
+    createdAt: datetime
+    
+    venue_name: Optional[str] = None
+    team_name: Optional[str] = None
+    booker_name: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+

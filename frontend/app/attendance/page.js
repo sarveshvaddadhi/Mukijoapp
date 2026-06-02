@@ -1,11 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import AppShell from "@/components/AppShell";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import MobileShell, { T } from "@/components/MobileShell";
 
 export default function AttendancePage() {
+  return (
+    <Suspense fallback={<div style={{ background: T.bg, height: "100vh" }}/>}>
+      <AttendanceContent/>
+    </Suspense>
+  );
+}
+
+function AttendanceContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -27,10 +36,17 @@ export default function AttendancePage() {
     try {
       const res = await fetch(`/api/events?userId=${userId}`);
       const d = await res.json();
-      setEvents(d.events || []);
+      const evs = d.events || [];
+      setEvents(evs);
+      // Auto-select if eventId param passed
+      const eventId = searchParams.get("eventId");
+      if (eventId) {
+        const found = evs.find(e => String(e.id) === eventId);
+        if (found) loadEventAttendance(found);
+      }
     } catch (e) { console.error(e); }
     setLoading(false);
-  };
+  }
 
   async function loadEventAttendance(event) {
     setSelectedEvent(event);
@@ -46,7 +62,7 @@ export default function AttendancePage() {
       (attData.records || []).forEach(r => { map[r.userId] = r.status; });
       setRecords(map);
     } catch (e) { console.error(e); }
-  };
+  }
 
   async function loadReport(teamId) {
     try {
@@ -54,7 +70,7 @@ export default function AttendancePage() {
       const d = await res.json();
       setReport(d.report || []);
     } catch (e) { console.error(e); }
-  };
+  }
 
   const markAttendance = async (userId, status) => {
     setRecords(prev => ({ ...prev, [userId]: status }));
@@ -81,109 +97,179 @@ export default function AttendancePage() {
   };
 
   if (!user) return null;
-  const initials = (n) => n.split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase();
-  const colors = ["#6366f1", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"];
-  const statusStyles = {
-    PRESENT: { bg: "#dcfce7", color: "#16a34a", label: "Present" },
-    ABSENT: { bg: "#fef2f2", color: "#dc2626", label: "Absent" },
-    LATE: { bg: "#fefce8", color: "#d97706", label: "Late" },
-    EXCUSED: { bg: "#f1f5f9", color: "#64748b", label: "Excused" },
+
+  const initials = n => (n || "?").split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase();
+  const avatarColors = ["#0057B8","#00AA55","#D97706","#7C3AED","#DC2626","#0891B2"];
+  const statusStyle = {
+    PRESENT: { bg: "#E8F9F2", color: "#00AA55", label: "Present", icon: "✅" },
+    ABSENT:  { bg: "#FEF2F2", color: "#DC2626", label: "Absent",  icon: "❌" },
+    LATE:    { bg: "#FFFBEB", color: "#D97706", label: "Late",    icon: "⏰" },
+    EXCUSED: { bg: "#F1F5F9", color: "#6B7280", label: "Excused", icon: "📝" },
   };
 
-  return (
-    <AppShell searchPlaceholder="Search attendance...">
-      <h1 style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", marginBottom: "4px" }}>Attendance</h1>
-      <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "20px" }}>Track attendance for events and view reports</p>
+  const presentCount = members.filter(m => records[m.userId] === "PRESENT").length;
+  const absentCount  = members.filter(m => records[m.userId] === "ABSENT").length;
+  const lateCount    = members.filter(m => records[m.userId] === "LATE").length;
 
+  return (
+    <MobileShell title="Attendance">
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "0", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", marginBottom: "20px", width: "fit-content" }}>
-        {[{ key: "mark", label: "Mark Attendance" }, { key: "report", label: "Reports" }].map(t => (
-          <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
-            padding: "9px 20px", border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-            background: activeTab === t.key ? "#2563eb" : "#fff",
-            color: activeTab === t.key ? "#fff" : "#64748b",
-          }}>{t.label}</button>
+      <div style={{
+        display: "flex", gap: 0, background: T.card, borderRadius: 12,
+        padding: 4, boxShadow: T.shadow, marginBottom: 16,
+      }}>
+        {[["mark","Mark Attendance"],["report","Reports"]].map(([key, label]) => (
+          <button key={key} onClick={() => setActiveTab(key)} style={{
+            flex: 1, padding: "9px", borderRadius: 9, border: "none",
+            fontSize: 13, fontWeight: 600, cursor: "pointer",
+            background: activeTab === key ? T.primary : "transparent",
+            color: activeTab === key ? "#fff" : T.sub,
+            transition: "all 0.15s",
+          }}>{label}</button>
         ))}
       </div>
 
       {activeTab === "mark" && (
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "16px", alignItems: "start" }}>
-          {/* Event List */}
-          <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0", maxHeight: "600px", overflowY: "auto" }}>
-            <div style={{ padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
-              <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Select Event</span>
+        <>
+          {/* Event selector */}
+          <div style={{ background: T.card, borderRadius: 16, boxShadow: T.shadow, marginBottom: 14 }}>
+            <div style={{ padding: "12px 14px", borderBottom: `1px solid ${T.border}` }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Select Event</h3>
             </div>
-            {loading ? <div style={{ padding: "20px", color: "#94a3b8", fontSize: "13px" }}>Loading...</div> :
-              events.length === 0 ? <div style={{ padding: "20px", color: "#94a3b8", fontSize: "13px" }}>No events. Create one first.</div> :
-                events.map(ev => (
+            {loading ? (
+              <div style={{ padding: 20, color: T.sub, fontSize: 13 }}>Loading events...</div>
+            ) : events.length === 0 ? (
+              <div style={{ padding: 20, color: T.sub, fontSize: 13 }}>
+                No events yet.{" "}
+                <button onClick={() => router.push("/events?create=true")} style={{
+                  background: "none", border: "none", color: T.primary, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                }}>Create one →</button>
+              </div>
+            ) : (
+              <div style={{ maxHeight: 240, overflowY: "auto" }}>
+                {events.map(ev => (
                   <button key={ev.id} onClick={() => loadEventAttendance(ev)} style={{
-                    width: "100%", textAlign: "left", padding: "12px 16px",
-                    background: selectedEvent?.id === ev.id ? "#eff6ff" : "transparent",
-                    border: "none", borderBottom: "1px solid #f8fafc",
-                    cursor: "pointer", display: "block",
+                    width: "100%", textAlign: "left", padding: "11px 14px",
+                    border: "none", borderBottom: `1px solid ${T.border}`,
+                    background: selectedEvent?.id === ev.id ? T.primaryL : "#fff",
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 12,
                   }}>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{ev.title}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "3px" }}>
-                      {new Date(ev.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })} · {ev.team?.name}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                      background: selectedEvent?.id === ev.id ? T.primary : T.border,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 700,
+                      color: selectedEvent?.id === ev.id ? "#fff" : T.sub,
+                    }}>
+                      {new Date(ev.date).getDate()}
                     </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{ev.title}</div>
+                      <div style={{ fontSize: 11, color: T.sub }}>
+                        {new Date(ev.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                        {ev.team?.name ? ` · ${ev.team.name}` : ""}
+                      </div>
+                    </div>
+                    {selectedEvent?.id === ev.id && (
+                      <span style={{ marginLeft: "auto", color: T.primary, fontSize: 14, fontWeight: 700 }}>✓</span>
+                    )}
                   </button>
                 ))}
+              </div>
+            )}
           </div>
 
           {/* Attendance Sheet */}
-          <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0" }}>
-            {!selectedEvent ? (
-              <div style={{ padding: "60px 20px", textAlign: "center", color: "#94a3b8" }}>
-                <div style={{ fontSize: "40px", marginBottom: "10px" }}>✅</div>
-                <p style={{ fontSize: "14px" }}>Select an event to mark attendance</p>
+          {selectedEvent && (
+            <div style={{ background: T.card, borderRadius: 16, boxShadow: T.shadow, overflow: "hidden" }}>
+              {/* Header */}
+              <div style={{ padding: "14px 14px", background: T.primaryL }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, color: T.primary }}>{selectedEvent.title}</h3>
+                <p style={{ fontSize: 12, color: T.primary, opacity: 0.75, marginTop: 2 }}>
+                  {new Date(selectedEvent.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+                </p>
+                {/* Stats */}
+                <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#00AA55" }}>✅ {presentCount} Present</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.red }}>❌ {absentCount} Absent</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#D97706" }}>⏰ {lateCount} Late</span>
+                </div>
               </div>
-            ) : (
-              <>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>{selectedEvent.title}</h3>
-                    <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>{members.length} members</p>
-                  </div>
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => markAll("PRESENT")} style={{ padding: "6px 14px", borderRadius: "8px", background: "#dcfce7", color: "#16a34a", border: "none", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>All Present</button>
-                    <button onClick={() => markAll("ABSENT")} style={{ padding: "6px 14px", borderRadius: "8px", background: "#fef2f2", color: "#dc2626", border: "none", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>All Absent</button>
-                  </div>
+
+              {/* Mark All buttons */}
+              <div style={{ padding: "10px 14px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 8 }}>
+                <button onClick={() => markAll("PRESENT")} style={{
+                  flex: 1, padding: "7px", borderRadius: 8, border: "none",
+                  background: "#E8F9F2", color: "#00AA55", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                }}>✅ All Present</button>
+                <button onClick={() => markAll("ABSENT")} style={{
+                  flex: 1, padding: "7px", borderRadius: 8, border: "none",
+                  background: "#FEF2F2", color: T.red, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                }}>❌ All Absent</button>
+              </div>
+
+              {/* Members */}
+              {members.length === 0 ? (
+                <div style={{ padding: "30px 20px", textAlign: "center", color: T.sub, fontSize: 13 }}>
+                  No members in this team yet.
                 </div>
-                <div style={{ padding: "8px 0" }}>
-                  {members.map((m, i) => {
-                    const st = records[m.userId];
-                    return (
-                      <div key={m.userId} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 20px", borderBottom: "1px solid #fafafa" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: colors[i % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff" }}>{initials(m.user.name)}</div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{m.user.name}</div>
-                          <div style={{ fontSize: "11px", color: "#94a3b8" }}>{m.role}{m.jersey ? ` · #${m.jersey}` : ""}</div>
-                        </div>
-                        <div style={{ display: "flex", gap: "4px" }}>
-                          {Object.entries(statusStyles).map(([key, val]) => (
-                            <button key={key} onClick={() => markAttendance(m.userId, key)} style={{
-                              padding: "5px 10px", borderRadius: "6px", fontSize: "10px", fontWeight: 600, cursor: "pointer",
-                              border: st === key ? `1.5px solid ${val.color}` : "1.5px solid #e2e8f0",
-                              background: st === key ? val.bg : "#fff",
-                              color: st === key ? val.color : "#94a3b8",
-                            }}>{val.label}</button>
-                          ))}
-                        </div>
+              ) : (
+                members.map((m, i) => {
+                  const st = records[m.userId];
+                  return (
+                    <div key={m.userId} style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                      borderBottom: `1px solid ${T.border}`,
+                    }}>
+                      <div style={{
+                        width: 38, height: 38, borderRadius: 12, flexShrink: 0,
+                        background: avatarColors[i % avatarColors.length],
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 12, fontWeight: 700, color: "#fff",
+                      }}>{initials(m.user.name)}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{m.user.name}</div>
+                        <div style={{ fontSize: 11, color: T.sub }}>{m.role}{m.jersey ? ` · #${m.jersey}` : ""}</div>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+                      {/* Status buttons */}
+                      <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                        {Object.entries(statusStyle).map(([key, val]) => (
+                          <button key={key} onClick={() => markAttendance(m.userId, key)} style={{
+                            width: 36, height: 36, borderRadius: 9, border: "none",
+                            background: st === key ? val.bg : "#F5F5F5",
+                            cursor: "pointer", fontSize: 14,
+                            outline: st === key ? `2px solid ${val.color}` : "none",
+                            transition: "all 0.1s",
+                          }} title={val.label}>{val.icon}</button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {!selectedEvent && !loading && events.length > 0 && (
+            <div style={{
+              background: T.card, borderRadius: 16, padding: "40px 20px", textAlign: "center",
+              boxShadow: T.shadow, color: T.sub,
+            }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>✅</div>
+              <p style={{ fontSize: 14 }}>Select an event above to mark attendance</p>
+            </div>
+          )}
+        </>
       )}
 
       {activeTab === "report" && (
-        <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0" }}>
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: 700 }}>Team Attendance Report</h3>
-            <select onChange={(e) => { if (e.target.value) loadReport(e.target.value); }} style={{ padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "13px" }}>
+        <div style={{ background: T.card, borderRadius: 16, boxShadow: T.shadow, overflow: "hidden" }}>
+          <div style={{ padding: "14px 14px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Team Report</h3>
+            <select onChange={e => { if (e.target.value) loadReport(e.target.value); }} style={{
+              padding: "7px 10px", borderRadius: 8, border: `1.5px solid ${T.border}`,
+              fontSize: 12, color: T.text, background: "#fff",
+            }}>
               <option value="">Select team</option>
               {[...new Set(events.map(e => JSON.stringify({ id: e.teamId, name: e.team?.name })))].map(t => {
                 const team = JSON.parse(t);
@@ -192,43 +278,41 @@ export default function AttendancePage() {
             </select>
           </div>
           {report.length === 0 ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>Select a team to view report</div>
+            <div style={{ padding: "40px 20px", textAlign: "center", color: T.sub, fontSize: 13 }}>
+              Select a team to view the attendance report
+            </div>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                  {["MEMBER", "ROLE", "SESSIONS", "PRESENT", "ATTENDANCE %"].map(h => (
-                    <th key={h} style={{ padding: "10px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: "#94a3b8" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {report.map((r, i) => (
-                  <tr key={r.userId} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                    <td style={{ padding: "12px 20px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: colors[i % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: "#fff" }}>{initials(r.name)}</div>
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{r.name}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "12px 20px", fontSize: "12px", color: "#64748b" }}>{r.role}</td>
-                    <td style={{ padding: "12px 20px", fontSize: "13px", fontWeight: 600 }}>{r.total}</td>
-                    <td style={{ padding: "12px 20px", fontSize: "13px", fontWeight: 600, color: "#16a34a" }}>{r.present}</td>
-                    <td style={{ padding: "12px 20px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "#f1f5f9", overflow: "hidden", maxWidth: "100px" }}>
-                          <div style={{ width: `${r.percentage}%`, height: "100%", borderRadius: "3px", background: r.percentage >= 80 ? "#16a34a" : r.percentage >= 50 ? "#d97706" : "#dc2626", transition: "width 0.3s" }} />
-                        </div>
-                        <span style={{ fontSize: "13px", fontWeight: 700, color: r.percentage >= 80 ? "#16a34a" : r.percentage >= 50 ? "#d97706" : "#dc2626" }}>{r.percentage}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            report.map((r, i) => (
+              <div key={r.userId} style={{
+                padding: "12px 14px", borderBottom: `1px solid ${T.border}`,
+                display: "flex", alignItems: "center", gap: 12,
+              }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 12,
+                  background: avatarColors[i % avatarColors.length],
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 12, fontWeight: 700, color: "#fff",
+                }}>{initials(r.name)}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{r.name}</div>
+                  <div style={{ fontSize: 11, color: T.sub }}>{r.role} · {r.present}/{r.total} sessions</div>
+                  <div style={{ height: 5, borderRadius: 3, background: T.border, overflow: "hidden", marginTop: 5 }}>
+                    <div style={{
+                      width: `${r.percentage}%`, height: "100%", borderRadius: 3,
+                      background: r.percentage >= 80 ? "#00AA55" : r.percentage >= 50 ? "#D97706" : T.red,
+                    }}/>
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: 15, fontWeight: 800,
+                  color: r.percentage >= 80 ? "#00AA55" : r.percentage >= 50 ? "#D97706" : T.red,
+                  flexShrink: 0,
+                }}>{r.percentage}%</div>
+              </div>
+            ))
           )}
         </div>
       )}
-    </AppShell>
+    </MobileShell>
   );
 }
